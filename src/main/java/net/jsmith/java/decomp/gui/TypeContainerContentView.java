@@ -2,10 +2,11 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
-import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -22,7 +23,9 @@ public class TypeContainerContentView extends ScrollPane {
         this.containerView = Objects.requireNonNull( containerView, "containerView" );
         
         TypeContainer typeContainer = containerView.getTypeContainer( );
-        this.contentTree = new TreeView< >( new PackageTreeItem( typeContainer.getName( ) ) );
+        this.contentTree = new TreeView< >( new PackageTreeItem( "" ) );
+        this.contentTree.setShowRoot( false );
+        
         this.setContent( this.contentTree );
         
         typeContainer.getContainedTypes( ).stream( ).forEach( ( typeReference ) -> {
@@ -30,6 +33,19 @@ public class TypeContainerContentView extends ScrollPane {
         } );
         ( ( PackageTreeItem ) this.contentTree.getRoot( ) ).sortChildren( );
         
+        this.contentTree.setCellFactory( ( tree ) -> {
+        	TreeCell< String > cell = new TextFieldTreeCell< >( );
+        	cell.setOnMouseClicked( ( evt ) -> {
+        		if( evt.getButton( ) == MouseButton.PRIMARY ) {
+        			TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
+	                if( selectedItem instanceof ClassTreeItem ) {
+	                	containerView.openAndShowType( ( ( ClassTreeItem ) selectedItem ).typeReference );
+	                }
+        		}
+        	} );
+        	
+        	return cell;
+        } );
         this.contentTree.setOnKeyPressed( ( evt ) -> {
             if( evt.getCode( ) == KeyCode.ENTER ) {
                 TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
@@ -38,19 +54,6 @@ public class TypeContainerContentView extends ScrollPane {
                 }
                 else {
                     selectedItem.setExpanded( !selectedItem.isExpanded( ) );
-                }
-            }
-        } );
-        this.contentTree.setOnMouseClicked( ( evt ) -> {
-            if( evt.getButton( ) == MouseButton.PRIMARY ) {
-                if( evt.getTarget( ) instanceof Group ) {
-                    // Ignore clicks on the arrows in the TreeView
-                    return;
-                }
-                
-                TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
-                if( selectedItem instanceof ClassTreeItem ) {
-                    containerView.openAndShowType( ( ( ClassTreeItem ) selectedItem ).typeReference );
                 }
             }
         } );
