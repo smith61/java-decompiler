@@ -14,6 +14,7 @@ public class TypeContainerUtils {
         try {
             URI jarURI = new URI( "jar:" + jarPath.toUri( ).toString( ) );
             Map< String, String > env = new HashMap< >( );
+            env.put( "create", "false" );
             
             FileSystem zipSystem = FileSystems.newFileSystem( jarURI, env, null );
             return new NIOPathTypeContainer( jarPath.getFileName( ).toString( ), zipSystem, zipSystem.getPath( "/" ) );
