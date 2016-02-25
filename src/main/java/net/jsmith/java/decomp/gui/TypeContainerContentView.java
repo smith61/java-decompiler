@@ -2,6 +2,7 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
+import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -42,6 +43,11 @@ public class TypeContainerContentView extends ScrollPane {
         } );
         this.contentTree.setOnMouseClicked( ( evt ) -> {
             if( evt.getButton( ) == MouseButton.PRIMARY ) {
+                if( evt.getTarget( ) instanceof Group ) {
+                    // Ignore clicks on the arrows in the TreeView
+                    return;
+                }
+                
                 TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
                 if( selectedItem instanceof ClassTreeItem ) {
                     containerView.openAndShowType( ( ( ClassTreeItem ) selectedItem ).typeReference );
