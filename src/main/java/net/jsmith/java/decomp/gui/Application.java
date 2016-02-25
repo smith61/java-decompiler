@@ -1,6 +1,8 @@
 package net.jsmith.java.decomp.gui;
 
 import javafx.scene.Scene;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class Application extends javafx.application.Application {
@@ -13,9 +15,16 @@ public class Application extends javafx.application.Application {
     public void start( Stage primaryStage ) throws Exception {
         primaryStage.setTitle( "Java Decompiler" );
         
-        ContainerGroupView root = new ContainerGroupView( );
-        root.setFitToHeight( true );
-        root.setFitToWidth( true );
+        VBox root = new VBox( );
+        
+        ContainerGroupView containerGroup = new ContainerGroupView( );
+        containerGroup.setFitToHeight( true );
+        containerGroup.setFitToWidth( true );
+        
+        ApplicationMenuBar menuBar = new ApplicationMenuBar( containerGroup );
+        
+        root.getChildren( ).addAll( menuBar, containerGroup );
+        VBox.setVgrow( containerGroup, Priority.ALWAYS );
         
         primaryStage.setScene( new Scene( root, 600, 480 ) );
         primaryStage.show( );
