@@ -42,7 +42,7 @@ public class TypeReference {
         int startIndex = this.typeName.lastIndexOf( '.' );
         if( startIndex <= 0 ) return this.typeName;
         
-        return this.typeName.substring( startIndex );
+        return this.typeName.substring( startIndex + 1 );
     }
     
     public CompletableFuture< Optional< CompilationUnit > > getTypeAST( ) {
