@@ -21,7 +21,7 @@ public class TypeReferenceView extends TextArea {
                 ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + typeReference.getFullyQualifiedName( ), err );
             }
             else {
-                TypeReferenceView.this.setText( ast.get( ).toString( ) );
+                TypeReferenceView.this.setText( ast.get( ).getText( ) );
             }
         }, PlatformExecutor.INSTANCE );
     }
