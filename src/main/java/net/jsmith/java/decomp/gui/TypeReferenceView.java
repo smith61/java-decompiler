@@ -2,6 +2,8 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
+import com.strobel.decompiler.languages.java.ast.CompilationUnit;
+
 import javafx.scene.control.TextArea;
 import net.jsmith.java.decomp.reference.TypeReference;
 
@@ -20,8 +22,11 @@ public class TypeReferenceView extends TextArea {
             if( err != null ) {
                 ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + typeReference.getFullyQualifiedName( ), err );
             }
+            else if( !ast.isPresent( ) ) {
+            	setText( "ERROR: Empty ast returned." );
+            }
             else {
-                TypeReferenceView.this.setText( ast.get( ).getText( ) );
+                buildViewForAST( ast.get( ) );
             }
         }, PlatformExecutor.INSTANCE );
     }
@@ -32,6 +37,10 @@ public class TypeReferenceView extends TextArea {
     
     public TypeReference getTypeReference( ) {
         return this.typeReference;
+    }
+    
+    private void buildViewForAST( CompilationUnit ast ) {
+    	this.setText( ast.getText( ) );
     }
     
 }

@@ -69,6 +69,8 @@ public class NIOPathTypeContainer implements TypeContainer, ITypeLoader {
         options.getSettings( ).setForceExplicitImports( true );
         
         MetadataSystem metadataSystem = new MetadataSystem( this );
+        metadataSystem.setEagerMethodLoadingEnabled( true );
+        
         TypeDefinition type = metadataSystem.lookupType( reference.getFullyQualifiedName( ) ).resolve( );
         
         JavaLanguage lang = new JavaLanguage( );
