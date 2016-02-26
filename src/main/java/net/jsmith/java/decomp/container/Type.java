@@ -3,12 +3,17 @@ package net.jsmith.java.decomp.container;
 import java.lang.ref.SoftReference;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 
 import javafx.application.Platform;
 
 public class Type {
+	
+	private static final Logger LOG = LoggerFactory.getLogger( Type.class );
 
 	private final AbstractTypeContainer owningContainer;
 	private final TypeMetadata typeMetadata;
@@ -41,6 +46,9 @@ public class Type {
 			synchronized( this.LOCK ) {
 				def = this.typeDefinition.get( );
 				if( def == null ) {
+					if( LOG.isDebugEnabled( ) ) {
+						LOG.debug( "Fetching type definition for type '{}' from container '{}'.", this.getTypeMetadata( ).getFullName( ), this.owningContainer.getName( ) );
+					}
 					MetadataSystem metadataSystem = this.owningContainer.getMetadataSystem( );
 					def = metadataSystem.lookupType( this.getTypeMetadata( ).getFullName( ) ).resolve( );
 					

@@ -3,6 +3,9 @@ package net.jsmith.java.decomp.gui;
 import java.util.ListIterator;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.collections.MapChangeListener.Change;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeCell;
@@ -18,6 +21,8 @@ import net.jsmith.java.decomp.container.TypeMetadata;
 
 public class TypeContainerContentView extends ScrollPane {
 
+	private static final Logger LOG = LoggerFactory.getLogger( TypeContainerContentView.class );
+	
     private final TypeContainerView containerView;
     
     private final TreeView< String > contentTree;
@@ -33,20 +38,7 @@ public class TypeContainerContentView extends ScrollPane {
         
         typeContainer.getContainedTypes( ).addListener( ( Change< ? extends String, ? extends Type > change ) -> {
         	if( change.wasAdded( ) ) {
-        		try {
-	            	Type type = change.getValueAdded( );
-	            	if( type.getTypeMetadata( ).getEnclosingType( ) != null ) {
-	            		//System.out.println( "Ignoring: " + type.getTypeMetadata( ).getFullName( ) );
-	            		return;
-	            	}
-	            	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
-        		}
-        		catch( Throwable t ) {
-        			t.printStackTrace( );
-        		}
-        	}
-        	else {
-        		System.out.println( "A" );
+            	this.addType( change.getValueAdded( ) );
         	}
         } );
         buildContentTree( );
@@ -57,7 +49,11 @@ public class TypeContainerContentView extends ScrollPane {
         		if( evt.getButton( ) == MouseButton.PRIMARY ) {
         			TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
 	                if( selectedItem instanceof ClassTreeItem ) {
-	                	containerView.openAndShowType( ( ( ClassTreeItem ) selectedItem ).typeReference );
+	                	Type type = ( ( ClassTreeItem ) selectedItem ).typeReference;
+	                	if( LOG.isDebugEnabled( ) ) {
+	                		LOG.debug( "Recieved click event on ClassTreeItem for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+	                	}
+	                	containerView.openAndShowType( type );
 	                }
         		}
         	} );
@@ -68,7 +64,11 @@ public class TypeContainerContentView extends ScrollPane {
             if( evt.getCode( ) == KeyCode.ENTER ) {
                 TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
                 if( selectedItem instanceof ClassTreeItem ) {
-                    containerView.openAndShowType( ( ( ClassTreeItem ) selectedItem ).typeReference );
+                	Type type = ( ( ClassTreeItem ) selectedItem ).typeReference;
+                	if( LOG.isDebugEnabled( ) ) {
+                		LOG.debug( "Recieved key event on ClassTreeItem for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+                	}
+                    containerView.openAndShowType( type );
                 }
                 else {
                     selectedItem.setExpanded( !selectedItem.isExpanded( ) );
@@ -104,13 +104,24 @@ public class TypeContainerContentView extends ScrollPane {
         return node;
     }
     
+    private void addType( Type type ) {
+    	if( type.getTypeMetadata( ).getEnclosingType( ) != null ) {
+    		if( LOG.isTraceEnabled( ) ) {
+    			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    		}
+    		return;
+    	}
+    	if( LOG.isTraceEnabled( ) ) {
+    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    	}
+    	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
+    }
+    
     private void buildContentTree( ) {
     	TypeContainer container = this.containerView.getTypeContainer( );
     	
     	this.contentTree.setRoot( new PackageTreeItem( container.getName( ) ) );
-    	container.getContainedTypes( ).values( ).stream( ).forEach( ( type ) -> {
-    		getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
-    	} );
+    	container.getContainedTypes( ).values( ).stream( ).forEach( this::addType );
     }
     
     private abstract class SortableTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {

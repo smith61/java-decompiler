@@ -2,6 +2,9 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
@@ -9,6 +12,8 @@ import net.jsmith.java.decomp.container.Type;
 import net.jsmith.java.decomp.container.TypeContainer;
 
 public class TypeContainerView extends BorderPane {
+	
+	private static final Logger LOG = LoggerFactory.getLogger( TypeContainerView.class );
 
     private final ContainerGroupView containerGroup;
     private final TypeContainer container;
@@ -39,8 +44,14 @@ public class TypeContainerView extends BorderPane {
     
     public void openAndShowType( Type type ) {
         if( type.getOwningContainer( ) != this.container ) {
+        	if( LOG.isErrorEnabled( ) ) {
+        		LOG.error( "Attempted to open type '{}' in container '{}' into container view for '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ), this.container.getName( ) );
+        	}
             throw new IllegalArgumentException( "Attempted to load reference into wrong view." );
         }
+    	if( LOG.isInfoEnabled( ) ) {
+    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    	}
         
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
             return Objects.equals( type, ( ( TypeReferenceView ) t.getContent( ) ).getType( ) );

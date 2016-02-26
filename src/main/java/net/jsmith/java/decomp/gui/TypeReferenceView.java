@@ -2,6 +2,8 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -17,6 +19,8 @@ import net.jsmith.java.decomp.container.Type;
 
 public class TypeReferenceView extends BorderPane {
 
+	private static final Logger LOG = LoggerFactory.getLogger( TypeReferenceView.class );
+	
     private final TypeContainerView containerView;
     private final Type type;
     
@@ -31,11 +35,21 @@ public class TypeReferenceView extends BorderPane {
         
         WebEngine engine = this.contentView.getEngine( );
         engine.loadContent( "Loading..." );
+        
+        if( LOG.isInfoEnabled( ) ) {
+        	LOG.info( "Decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+        }
         Decompiler.decompileType( type ).whenCompleteAsync( ( ast, err ) -> {
     		if( err != null ) {
+    			if( LOG.isErrorEnabled( ) ) {
+    				LOG.error( "Error decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ), err );
+    			}
                 ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + type.getTypeMetadata( ).getFullName( ), err );
             }
             else {
+            	if( LOG.isInfoEnabled( ) ) {
+            		LOG.info( "Received type AST for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+            	}
                 buildViewForAST( ast );
             }
     	}, PlatformExecutor.INSTANCE );

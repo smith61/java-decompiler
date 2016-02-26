@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
@@ -19,6 +22,8 @@ import net.jsmith.java.decomp.gui.PlatformExecutor;
 
 public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoader {
 
+	private static final Logger LOG = LoggerFactory.getLogger( AbstractTypeContainer.class );
+	
 	private final String name;
 	
 	private final MetadataSystem metadataSystem;
@@ -47,8 +52,17 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 	
 	protected final void loadType( String typeName ) {
 		try {
+			if( LOG.isInfoEnabled( ) ) {
+				LOG.info( "Loading type '{}' into container '{}'.", typeName, this.getName( ) );
+			}
 			TypeMetadata metadata;
 			try( InputStream is = this.getStreamForType( typeName ) ) {
+				if( is == null ) {
+					if( LOG.isWarnEnabled( ) ) {
+						LOG.warn( "Container '{}' attempted to load type '{}' it could not resolve.", this.getName( ), typeName );
+					}
+					return;
+				}
 				metadata = TypeMetadataLoader.loadMetadataFromStream( is );
 			}
 			
@@ -58,21 +72,35 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 				this.pendingUpdates.add( metadata );
 			}
 			if( scheduleUpdate ) {
+				if( LOG.isDebugEnabled( ) ) {
+					LOG.debug( "Scheduling update for container '{}'.", this.getName( ) );
+				}
 				PlatformExecutor.INSTANCE.execute( ( ) -> {
 					List< TypeMetadata > updates;
 					synchronized( LOCK ) {
 						updates = this.pendingUpdates;
 						this.pendingUpdates = new ArrayList< >( );
 					}
+					if( LOG.isDebugEnabled( ) ) {
+						LOG.debug( "Publishing '{}' updates for container '{}'.", updates.size( ), this.getName( ) );
+					}
 					for( TypeMetadata update : updates ) {
+						if( LOG.isTraceEnabled( ) ) {
+							LOG.trace( "Publishing update for type '{}' in container '{}'.", update.getFullName( ), this.getName( ) );
+						}
 						Type type = new Type( this, update );
 						this.containedTypes.put( update.getFullName( ), type );
+					}
+					if( LOG.isDebugEnabled( ) ) {
+						LOG.debug( "Published '{}' updates for container '{}'.", updates.size( ), this.getName( ) );
 					}
 				} );
 			}
 		}
-		catch( Throwable t ) {
-			t.printStackTrace( );
+		catch( Throwable err ) {
+			if( LOG.isErrorEnabled( ) ) {
+				LOG.error( "Error loading type '{}' into container '{}'.", typeName, this.getName( ), err );
+			}
 		}
 	}
 	
@@ -98,7 +126,12 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 		InputStream is = null;
 		try {
 			is = this.getStreamForType( internalName );
-			if( is == null ) return false;
+			if( is == null ) {
+				return false;
+			}
+			if( LOG.isDebugEnabled( ) ) {
+				LOG.debug( "Loading data for type '{}' from container '{}'.", internalName, this.getName( ) );
+			}
 			
 			ByteArrayOutputStream baos = new ByteArrayOutputStream( );
 			
@@ -114,7 +147,9 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 			return true;
 		}
 		catch( IOException ioe ) {
-			// TODO: Log exception
+			if( LOG.isErrorEnabled( ) ) {
+				LOG.error( "Error loading data from stream for type '{}' in container '{}'.", internalName, this.getName( ), ioe );
+			}
 			return false;
 		}
 		finally {
