@@ -1,5 +1,6 @@
 package net.jsmith.java.decomp.container;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,8 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 	
 	private final ObservableMap< String, Type > containedTypes;
 	
+	private List< Type > pendingUpdates;
+	
 	protected AbstractTypeContainer( String name ) {
 		this.name = name;
 		
@@ -28,6 +31,8 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 		this.metadataSystem.setEagerMethodLoadingEnabled( false );
 		
 		this.containedTypes = FXCollections.observableHashMap( );
+		
+		this.pendingUpdates = new ArrayList< >( );
 	}
 	
 	protected final MetadataSystem getMetadataSystem( ) {
@@ -45,9 +50,24 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 			// TODO: Log/Throw error?
 			return;
 		}
-		PlatformExecutor.INSTANCE.execute( ( ) -> {
-			containedTypes.put( typeName, new Type( this, typeDefinition ) );
-		} );
+		
+		boolean scheduleUpdate;
+		synchronized( this.pendingUpdates ) {
+			scheduleUpdate = this.pendingUpdates.isEmpty( );
+			this.pendingUpdates.add( new Type( this, typeDefinition ) );
+		}
+		if( scheduleUpdate ) {
+			PlatformExecutor.INSTANCE.execute( ( ) -> {
+				List< Type > updates;
+				synchronized( this.pendingUpdates ) {
+					updates = this.pendingUpdates;
+					this.pendingUpdates = new ArrayList< >( );
+				}
+				for( Type type : updates ) {
+					this.containedTypes.put( type.getTypeDefinition( ).getFullName( ), type );
+				}
+			} );
+		}
 	}
 	
 	@Override
