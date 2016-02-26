@@ -59,6 +59,8 @@ public class NIO2TypeContainer extends AbstractTypeContainer {
 				typeName = typeName.substring( 0, typeName.length( ) - ".class".length( ) );
 				typeName = typeName.replace( '/', '.' ).replace( '\\', '.' );
 				return typeName;
+			} ).sorted( ( l, r ) -> {
+				return l.compareTo( r );
 			} ).forEach( this::loadType );
 		}
 	}

@@ -34,7 +34,10 @@ public class TypeContainerContentView extends ScrollPane {
         	if( change.wasAdded( ) ) {
         		try {
 	            	Type type = change.getValueAdded( );
-	         
+	            	if( type.getTypeMetadata( ).getEnclosingType( ) != null ) {
+	            		//System.out.println( "Ignoring: " + type.getTypeMetadata( ).getFullName( ) );
+	            		return;
+	            	}
 	            	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
         		}
         		catch( Throwable t ) {

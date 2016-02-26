@@ -27,7 +27,7 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 	private final ObservableMap< String, Type > containedTypesView;
 	
 	private final Object LOCK = new Object( );
-	private List< Type > pendingUpdates;
+	private List< TypeMetadata > pendingUpdates;
 	
 	protected AbstractTypeContainer( String name ) {
 		this.name = name;
@@ -55,17 +55,18 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 			boolean scheduleUpdate;
 			synchronized( LOCK ) {
 				scheduleUpdate = this.pendingUpdates.isEmpty( );
-				this.pendingUpdates.add( new Type( this, metadata ) );
+				this.pendingUpdates.add( metadata );
 			}
 			if( scheduleUpdate ) {
 				PlatformExecutor.INSTANCE.execute( ( ) -> {
-					List< Type > updates;
+					List< TypeMetadata > updates;
 					synchronized( LOCK ) {
 						updates = this.pendingUpdates;
 						this.pendingUpdates = new ArrayList< >( );
 					}
-					for( Type type : updates ) {
-						this.containedTypes.put( type.getTypeMetadata( ).getFullName( ), type );
+					for( TypeMetadata update : updates ) {
+						Type type = new Type( this, update );
+						this.containedTypes.put( update.getFullName( ), type );
 					}
 				} );
 			}
