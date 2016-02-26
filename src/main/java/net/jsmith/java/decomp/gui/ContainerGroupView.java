@@ -3,6 +3,7 @@ package net.jsmith.java.decomp.gui;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import javafx.collections.ListChangeListener.Change;
 import javafx.scene.control.ScrollPane;
@@ -10,23 +11,23 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import net.jsmith.java.decomp.reference.PoolReferenceResolver;
-import net.jsmith.java.decomp.reference.ReferenceResolver;
-import net.jsmith.java.decomp.reference.TypeContainer;
-import net.jsmith.java.decomp.reference.TypeContainerUtils;
-import net.jsmith.java.decomp.reference.TypeReference;
+import net.jsmith.java.decomp.container.GroupReferenceResolver;
+import net.jsmith.java.decomp.container.ReferenceResolver;
+import net.jsmith.java.decomp.container.Type;
+import net.jsmith.java.decomp.container.TypeContainer;
+import net.jsmith.java.decomp.container.TypeContainerUtils;
 
 public class ContainerGroupView extends ScrollPane {
 
     private final TabPane containersTab;
     
-    private final ReferenceResolver referenceResolver;
+    private final GroupReferenceResolver referenceResolver;
     
     public ContainerGroupView( ) {
         this.containersTab = new TabPane( );
         this.setContent( this.containersTab );
         
-        this.referenceResolver = new PoolReferenceResolver( );
+        this.referenceResolver = new GroupReferenceResolver( );
         
         this.setOnDragOver( ( evt ) -> {
             Dragboard db = evt.getDragboard( );
@@ -66,12 +67,12 @@ public class ContainerGroupView extends ScrollPane {
         return this.referenceResolver;
     }
     
-    public void openAndShowType( TypeReference type ) {
+    public void openAndShowType( Type type ) {
         Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
             TypeContainerView view = ( TypeContainerView ) t.getContent( );
-            return view.getTypeContainer( ) == type.getContainer( );
+            return view.getTypeContainer( ) == type.getOwningContainer( );
         } ).findFirst( ).orElseThrow( ( ) -> {
-            throw new IllegalArgumentException( "Unable to locate container view for container: " + type.getContainer( ).getName( ) );
+            throw new IllegalArgumentException( "Unable to locate container view for container: " + type.getOwningContainer( ).getName( ) );
         } );
         
         this.containersTab.getSelectionModel( ).select( tab );
@@ -79,24 +80,32 @@ public class ContainerGroupView extends ScrollPane {
     }
     
     public void openAndShowFile( File file ) {
-        try {
-            TypeContainer container = TypeContainerUtils.createFromJar( Paths.get( file.toURI( ) ) );
-            Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-                TypeContainerView view = ( TypeContainerView ) t.getContent( );
-                return view.getTypeContainer( ).getName( ).equals( container.getName( ) );
-            } ).findFirst( ).orElseGet( ( ) -> {
-                Tab t = new Tab( );
-                t.setText( container.getName( ) );
-                t.setContent( new TypeContainerView( ContainerGroupView.this, container ) );
-                
-                containersTab.getTabs( ).add( t );
-                return t;
-            } );
-            this.containersTab.getSelectionModel( ).select( tab );
-        }
-        catch( IOException ioe ) {
-            ErrorDialog.displayError( "Error opening container.", "Error loading container at: " + file, ioe );
-        }
+    	TypeContainerUtils.createTypeContainerFromJar( Paths.get( file.toURI( ) ) ).whenCompleteAsync( ( container, err ) -> {
+    		if( err != null ) {
+    			ErrorDialog.displayError( "Error loading type container", "Error loading type container from file: " + file, err );
+    		}
+    		else {
+    			Optional< Tab > tab = containersTab.getTabs( ).stream( ).filter( ( t ) -> {
+    				TypeContainerView view = ( TypeContainerView ) t.getContent( );
+    				return view.getTypeContainer( ).getName( ).equals( container.getName( ) );
+    			} ).findFirst( );
+    			if( tab.isPresent( ) ) {
+    				try {
+    					container.close( );
+    				}
+    				catch( IOException ioe ) { }
+    				containersTab.getSelectionModel( ).select( tab.get( ) );
+    			}
+    			else {
+    				Tab t = new Tab( );
+    				t.setText( container.getName( ) );
+    				t.setContent( new TypeContainerView( this, container ) );
+    				
+    				containersTab.getTabs( ).add( t );
+    				containersTab.getSelectionModel( ).select( t );
+    			}
+    		}
+    	}, PlatformExecutor.INSTANCE );
     }
     
 }

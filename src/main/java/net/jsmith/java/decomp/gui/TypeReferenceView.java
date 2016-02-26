@@ -2,45 +2,64 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.Objects;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
-import javafx.scene.control.TextArea;
-import net.jsmith.java.decomp.reference.TypeReference;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import net.jsmith.java.decomp.container.Decompiler;
+import net.jsmith.java.decomp.container.Type;
 
-public class TypeReferenceView extends TextArea {
+public class TypeReferenceView extends BorderPane {
 
     private final TypeContainerView containerView;
-    private final TypeReference typeReference;
+    private final Type type;
     
-    public TypeReferenceView( TypeContainerView containerView, TypeReference typeReference ) {
-        super( "Loading..." );
-        
+    private final WebView contentView;
+    
+    public TypeReferenceView( TypeContainerView containerView, Type type ) {
         this.containerView = Objects.requireNonNull( containerView, "containerView" );
-        this.typeReference = Objects.requireNonNull( typeReference, "typeReference" );
+        this.type = Objects.requireNonNull( type, "type" );
         
-        this.typeReference.getTypeAST( ).whenCompleteAsync( ( ast, err ) -> {
-            if( err != null ) {
-                ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + typeReference.getFullyQualifiedName( ), err );
-            }
-            else if( !ast.isPresent( ) ) {
-            	setText( "ERROR: Empty ast returned." );
+        this.contentView = new WebView( );
+        this.setCenter( this.contentView );
+        
+        WebEngine engine = this.contentView.getEngine( );
+        engine.loadContent( "Loading..." );
+        Decompiler.decompileType( type ).whenCompleteAsync( ( ast, err ) -> {
+    		if( err != null ) {
+                ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + type.getTypeDefinition( ).getFullName( ), err );
             }
             else {
-                buildViewForAST( ast.get( ) );
+                buildViewForAST( ast );
             }
-        }, PlatformExecutor.INSTANCE );
+    	}, PlatformExecutor.INSTANCE );
     }
     
     public TypeContainerView getContainerView( ) {
         return this.containerView;
     }
     
-    public TypeReference getTypeReference( ) {
-        return this.typeReference;
+    public Type getType( ) {
+        return this.type;
     }
     
     private void buildViewForAST( CompilationUnit ast ) {
-    	this.setText( ast.getText( ) );
+    	Document document = this.contentView.getEngine( ).getDocument( );
+    	Element rootElement = document.getDocumentElement( );
+    	Node body = rootElement.getElementsByTagName( "BODY" ).item( 0 );
+    	
+    	NodeList children = body.getChildNodes( );
+    	for( int i = 0; i < children.getLength( ); i++ ) {
+    		body.removeChild( children.item( i ) );
+    	}
+    	
+    	this.contentView.getEngine( ).loadContent( ast.getText( ), "text/plain" );
     }
     
 }

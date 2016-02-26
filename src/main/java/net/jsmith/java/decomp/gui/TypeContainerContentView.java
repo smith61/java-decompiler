@@ -1,7 +1,9 @@
 package net.jsmith.java.decomp.gui;
 
+import java.util.ListIterator;
 import java.util.Objects;
 
+import javafx.collections.MapChangeListener.Change;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -10,8 +12,8 @@ import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import net.jsmith.java.decomp.reference.TypeContainer;
-import net.jsmith.java.decomp.reference.TypeReference;
+import net.jsmith.java.decomp.container.Type;
+import net.jsmith.java.decomp.container.TypeContainer;
 
 public class TypeContainerContentView extends ScrollPane {
 
@@ -28,10 +30,14 @@ public class TypeContainerContentView extends ScrollPane {
         
         this.setContent( this.contentTree );
         
-        typeContainer.getContainedTypes( ).stream( ).forEach( ( typeReference ) -> {
-            getPackageTreeItem( typeReference ).getChildren( ).add( new ClassTreeItem( typeReference ) );
+        typeContainer.getContainedTypes( ).addListener( ( Change< ? extends String, ? extends Type > change ) -> {
+        	if( change.wasAdded( ) ) {
+            	Type type = change.getValueAdded( );
+         
+            	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeDefinition( ).getName( ) ) );
+        	}
         } );
-        ( ( PackageTreeItem ) this.contentTree.getRoot( ) ).sortChildren( );
+        buildContentTree( );
         
         this.contentTree.setCellFactory( ( tree ) -> {
         	TreeCell< String > cell = new TextFieldTreeCell< >( );
@@ -63,22 +69,22 @@ public class TypeContainerContentView extends ScrollPane {
         return this.containerView;
     }
     
-    private TreeItem< String > getPackageTreeItem( TypeReference typeReference ) {
-        TreeItem< String > node = this.contentTree.getRoot( );
-        for( String pkgPart : typeReference.getPackageName( ).split( "\\." ) ) {
+    private SortableTreeItem getPackageTreeItem( Type typeReference ) {
+        SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
+        for( String pkgPart : typeReference.getTypeDefinition( ).getPackageName( ).split( "\\." ) ) {
             if( pkgPart.isEmpty( ) ) {
                 continue;
             }
-            TreeItem< String > nextNode = null;
+            SortableTreeItem nextNode = null;
             for( TreeItem< String > child : node.getChildren( ) ) {
                 if( child.getValue( ).equals( pkgPart ) ) {
-                    nextNode = child;
+                    nextNode = ( SortableTreeItem ) child;
                     break;
                 }
             }
             if( nextNode == null ) {
                 nextNode = new PackageTreeItem( pkgPart );
-                node.getChildren( ).add( nextNode );
+                node.addChildSorted( nextNode );
             }
             node = nextNode;
         }
@@ -86,7 +92,58 @@ public class TypeContainerContentView extends ScrollPane {
         return node;
     }
     
-    private class PackageTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {
+    private void buildContentTree( ) {
+    	TypeContainer container = this.containerView.getTypeContainer( );
+    	
+    	this.contentTree.setRoot( new PackageTreeItem( container.getName( ) ) );
+    	container.getContainedTypes( ).values( ).stream( ).forEach( ( type ) -> {
+    		getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeDefinition( ).getName( ) ) );
+    	} );
+    }
+    
+    private abstract class SortableTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {
+
+    	public SortableTreeItem( String value ) {
+    		super( value );
+    	}
+    	
+    	public void addChildSorted( SortableTreeItem item ) {
+    		ListIterator< TreeItem< String > > itr = this.getChildren( ).listIterator( );
+    		while( itr.hasNext( ) ) {
+    			TreeItem< String > child = itr.next( );
+    			
+    			int cmp = item.compareTo( child );
+    			if( cmp < 0 ) {
+    				itr.previous( );
+    				break;
+    			}
+    		}
+    		itr.add( item );
+    	}
+    	
+		@Override
+		public int compareTo( TreeItem< String > o ) {
+			if( this instanceof PackageTreeItem ) {
+				if( o instanceof PackageTreeItem ) {
+					return this.getValue( ).compareTo( o.getValue( ) );
+				}
+				else {
+					// ClassTreeItems are sorted after us
+					return -1;
+				}
+			}
+			else if( o instanceof PackageTreeItem ) {
+				// We are a ClassTreeItem so we sort after PackageTreeItems
+				return 1;
+			}
+			else {
+				return this.getValue( ).compareTo( o.getValue( ) );
+			}
+		}
+    	
+    }
+    
+    private class PackageTreeItem extends SortableTreeItem {
 
         public PackageTreeItem( String pkgName ) {
             super( pkgName );
@@ -94,46 +151,18 @@ public class TypeContainerContentView extends ScrollPane {
             this.setGraphic( new ImageView( Icons.PACKAGE_ICON ) );
         }
         
-        public void sortChildren( ) {
-            this.getChildren( ).sort( null );
-            
-            this.getChildren( ).stream( ).filter( ( child ) -> {
-                return child instanceof PackageTreeItem;
-            } ).forEach( ( child ) -> {
-                ( ( PackageTreeItem ) child ).sortChildren( );
-            } );
-        }
-        
-        @Override
-        public int compareTo( TreeItem< String > o ) {
-            if( o instanceof PackageTreeItem ) {
-                return this.getValue( ).compareTo( o.getValue( ) );
-            }
-            // Only other type is ClassTreeItem, we always sort before them.
-            return -1;
-        }
-        
     }
     
-    private class ClassTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {
+    private class ClassTreeItem extends SortableTreeItem {
         
-        private final TypeReference typeReference;
+        private final Type typeReference;
         
-        public ClassTreeItem( TypeReference typeReference ) {
-            super( typeReference.getClassName( ) );
+        public ClassTreeItem( Type typeReference, String className ) {
+            super( className );
             
             this.typeReference = typeReference;
             
             this.setGraphic( new ImageView( Icons.CLASS_ICON ) );
-        }
-
-        @Override
-        public int compareTo( TreeItem< String > o ) {
-            if( o instanceof ClassTreeItem ) {
-                return this.getValue( ).compareTo( o.getValue( ) );
-            }
-            // Only other type is PackageTreeItem, we always sort after them
-            return 1;
         }
         
     }

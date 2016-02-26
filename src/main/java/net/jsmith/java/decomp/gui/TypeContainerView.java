@@ -5,8 +5,8 @@ import java.util.Objects;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import net.jsmith.java.decomp.reference.TypeContainer;
-import net.jsmith.java.decomp.reference.TypeReference;
+import net.jsmith.java.decomp.container.Type;
+import net.jsmith.java.decomp.container.TypeContainer;
 
 public class TypeContainerView extends BorderPane {
 
@@ -37,17 +37,17 @@ public class TypeContainerView extends BorderPane {
         return this.container;
     }
     
-    public void openAndShowType( TypeReference typeReference ) {
-        if( typeReference.getContainer( ) != this.container ) {
+    public void openAndShowType( Type type ) {
+        if( type.getOwningContainer( ) != this.container ) {
             throw new IllegalArgumentException( "Attempted to load reference into wrong view." );
         }
         
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            return Objects.equals( typeReference, ( ( TypeReferenceView ) t.getContent( ) ).getTypeReference( ) );
+            return Objects.equals( type, ( ( TypeReferenceView ) t.getContent( ) ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
             Tab t = new Tab( );
-            t.setText( typeReference.getFullyQualifiedName( ) );
-            t.setContent( new TypeReferenceView( TypeContainerView.this, typeReference ) );
+            t.setText( type.getTypeDefinition( ).getInternalName( ) );
+            t.setContent( new TypeReferenceView( TypeContainerView.this, type ) );
             
             typeReferenceTabs.getTabs( ).add( t );
             return t;
