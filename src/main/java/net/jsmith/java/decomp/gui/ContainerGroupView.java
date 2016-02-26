@@ -72,7 +72,7 @@ public class ContainerGroupView extends ScrollPane {
             TypeContainerView view = ( TypeContainerView ) t.getContent( );
             return view.getTypeContainer( ) == type.getOwningContainer( );
         } ).findFirst( ).orElseThrow( ( ) -> {
-            throw new IllegalArgumentException( "Unable to locate container view for container: " + type.getOwningContainer( ).getName( ) );
+            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getOwningContainer( ).getName( ) );
         } );
         
         this.containersTab.getSelectionModel( ).select( tab );
