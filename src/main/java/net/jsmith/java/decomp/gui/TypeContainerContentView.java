@@ -14,6 +14,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import net.jsmith.java.decomp.container.Type;
 import net.jsmith.java.decomp.container.TypeContainer;
+import net.jsmith.java.decomp.container.TypeMetadata;
 
 public class TypeContainerContentView extends ScrollPane {
 
@@ -173,7 +174,13 @@ public class TypeContainerContentView extends ScrollPane {
             
             this.typeReference = typeReference;
             
-            this.setGraphic( new ImageView( Icons.CLASS_ICON ) );
+            TypeMetadata metadata = typeReference.getTypeMetadata( );
+            if( metadata.isInterface( ) ) {
+            	this.setGraphic( new ImageView( Icons.INTERFACE_ICON ) );
+            }
+            else {
+            	this.setGraphic( new ImageView( Icons.CLASS_ICON ) );
+            }
         }
         
     }
