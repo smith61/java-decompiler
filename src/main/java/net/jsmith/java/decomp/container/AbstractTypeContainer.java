@@ -1,17 +1,20 @@
 package net.jsmith.java.decomp.container;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.strobel.assembler.metadata.Buffer;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
-import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.assembler.metadata.TypeReference;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
+import net.jsmith.java.decomp.asm.TypeMetadataLoader;
 import net.jsmith.java.decomp.gui.PlatformExecutor;
 
 public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoader {
@@ -21,7 +24,9 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 	private final MetadataSystem metadataSystem;
 	
 	private final ObservableMap< String, Type > containedTypes;
+	private final ObservableMap< String, Type > containedTypesView;
 	
+	private final Object LOCK = new Object( );
 	private List< Type > pendingUpdates;
 	
 	protected AbstractTypeContainer( String name ) {
@@ -31,6 +36,7 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 		this.metadataSystem.setEagerMethodLoadingEnabled( false );
 		
 		this.containedTypes = FXCollections.observableHashMap( );
+		this.containedTypesView = FXCollections.unmodifiableObservableMap( this.containedTypes );
 		
 		this.pendingUpdates = new ArrayList< >( );
 	}
@@ -39,34 +45,33 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 		return this.metadataSystem;
 	}
 	
-	protected final void loadTypeDefinition( String typeName ) {
-		TypeReference typeReference = this.metadataSystem.lookupType( typeName );
-		if( typeReference == null ) {
-			// TODO: Log/Throw error?
-			return;
+	protected final void loadType( String typeName ) {
+		try {
+			TypeMetadata metadata;
+			try( InputStream is = this.getStreamForType( typeName ) ) {
+				metadata = TypeMetadataLoader.loadMetadataFromStream( is );
+			}
+			
+			boolean scheduleUpdate;
+			synchronized( LOCK ) {
+				scheduleUpdate = this.pendingUpdates.isEmpty( );
+				this.pendingUpdates.add( new Type( this, metadata ) );
+			}
+			if( scheduleUpdate ) {
+				PlatformExecutor.INSTANCE.execute( ( ) -> {
+					List< Type > updates;
+					synchronized( LOCK ) {
+						updates = this.pendingUpdates;
+						this.pendingUpdates = new ArrayList< >( );
+					}
+					for( Type type : updates ) {
+						this.containedTypes.put( type.getTypeMetadata( ).getFullName( ), type );
+					}
+				} );
+			}
 		}
-		TypeDefinition typeDefinition = typeReference.resolve( );
-		if( typeDefinition == null ) {
-			// TODO: Log/Throw error?
-			return;
-		}
-		
-		boolean scheduleUpdate;
-		synchronized( this.pendingUpdates ) {
-			scheduleUpdate = this.pendingUpdates.isEmpty( );
-			this.pendingUpdates.add( new Type( this, typeDefinition ) );
-		}
-		if( scheduleUpdate ) {
-			PlatformExecutor.INSTANCE.execute( ( ) -> {
-				List< Type > updates;
-				synchronized( this.pendingUpdates ) {
-					updates = this.pendingUpdates;
-					this.pendingUpdates = new ArrayList< >( );
-				}
-				for( Type type : updates ) {
-					this.containedTypes.put( type.getTypeDefinition( ).getFullName( ), type );
-				}
-			} );
+		catch( Throwable t ) {
+			t.printStackTrace( );
 		}
 	}
 	
@@ -85,7 +90,42 @@ public abstract class AbstractTypeContainer implements TypeContainer, ITypeLoade
 	
 	@Override
 	public final ObservableMap< String, Type > getContainedTypes( ) {
-		return FXCollections.unmodifiableObservableMap( this.containedTypes );
+		return this.containedTypesView;
 	}
+	
+	public final boolean tryLoadType( String internalName, Buffer buffer ) {
+		InputStream is = null;
+		try {
+			is = this.getStreamForType( internalName );
+			if( is == null ) return false;
+			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream( );
+			
+			int read;
+			byte[ ] buf = new byte[ 4096 ];
+			while( ( read = is.read( buf ) ) >= 0 ) {
+				baos.write( buf, 0, read );
+			}
+			
+			buf = baos.toByteArray( );
+			buffer.reset( buf.length );
+			System.arraycopy( buf, 0, buffer.array( ), 0, buf.length );
+			return true;
+		}
+		catch( IOException ioe ) {
+			// TODO: Log exception
+			return false;
+		}
+		finally {
+			if( is != null ) {
+				try {
+					is.close( );
+				}
+				catch( IOException ioe ) { }
+			}
+		}
+	}
+	
+	protected abstract InputStream getStreamForType( String internalName ) throws IOException;
 	
 }

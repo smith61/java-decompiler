@@ -32,9 +32,17 @@ public class TypeContainerContentView extends ScrollPane {
         
         typeContainer.getContainedTypes( ).addListener( ( Change< ? extends String, ? extends Type > change ) -> {
         	if( change.wasAdded( ) ) {
-            	Type type = change.getValueAdded( );
-         
-            	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeDefinition( ).getName( ) ) );
+        		try {
+	            	Type type = change.getValueAdded( );
+	         
+	            	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
+        		}
+        		catch( Throwable t ) {
+        			t.printStackTrace( );
+        		}
+        	}
+        	else {
+        		System.out.println( "A" );
         	}
         } );
         buildContentTree( );
@@ -71,7 +79,7 @@ public class TypeContainerContentView extends ScrollPane {
     
     private SortableTreeItem getPackageTreeItem( Type typeReference ) {
         SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-        for( String pkgPart : typeReference.getTypeDefinition( ).getPackageName( ).split( "\\." ) ) {
+        for( String pkgPart : typeReference.getTypeMetadata( ).getPackage( ).split( "\\." ) ) {
             if( pkgPart.isEmpty( ) ) {
                 continue;
             }
@@ -97,7 +105,7 @@ public class TypeContainerContentView extends ScrollPane {
     	
     	this.contentTree.setRoot( new PackageTreeItem( container.getName( ) ) );
     	container.getContainedTypes( ).values( ).stream( ).forEach( ( type ) -> {
-    		getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeDefinition( ).getName( ) ) );
+    		getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
     	} );
     }
     

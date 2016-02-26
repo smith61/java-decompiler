@@ -1,13 +1,12 @@
 package net.jsmith.java.decomp.container;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
-
-import com.strobel.assembler.metadata.Buffer;
 
 import net.jsmith.java.decomp.gui.ErrorDialog;
 
@@ -42,22 +41,13 @@ public class NIO2TypeContainer extends AbstractTypeContainer {
 	}
 
 	@Override
-	public boolean tryLoadType( String internalName, Buffer buffer ) {
-		try {
-			Path loc = this.rootPath.resolve( internalName.replace( '.', '/' ) + ".class" );
-			if( !Files.isRegularFile( loc ) ) {
-				return false;
-			}
-			
-			byte[ ] bytes = Files.readAllBytes( loc );
-			buffer.reset( bytes.length );
-			System.arraycopy( bytes, 0, buffer.array( ), 0, bytes.length );
-			return true;
+	protected InputStream getStreamForType( String internalName ) throws IOException {
+		Path loc = this.rootPath.resolve( internalName.replace( '.', '/' ) + ".class" );
+		if( !Files.isRegularFile( loc ) ) {
+			return null;
 		}
-		catch( IOException ioe ) {
-			// TODO: Log error somewhere
-			return false;
-		}
+		
+		return Files.newInputStream( loc );
 	}
 	
 	private void loadAllContainedTypes( ) throws IOException {
@@ -69,7 +59,7 @@ public class NIO2TypeContainer extends AbstractTypeContainer {
 				typeName = typeName.substring( 0, typeName.length( ) - ".class".length( ) );
 				typeName = typeName.replace( '/', '.' ).replace( '\\', '.' );
 				return typeName;
-			} ).forEach( this::loadTypeDefinition );;
+			} ).forEach( this::loadType );
 		}
 	}
 	

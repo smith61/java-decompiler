@@ -33,7 +33,7 @@ public class TypeReferenceView extends BorderPane {
         engine.loadContent( "Loading..." );
         Decompiler.decompileType( type ).whenCompleteAsync( ( ast, err ) -> {
     		if( err != null ) {
-                ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + type.getTypeDefinition( ).getFullName( ), err );
+                ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + type.getTypeMetadata( ).getFullName( ), err );
             }
             else {
                 buildViewForAST( ast );

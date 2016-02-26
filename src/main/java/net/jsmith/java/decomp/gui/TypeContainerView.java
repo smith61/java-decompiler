@@ -46,7 +46,7 @@ public class TypeContainerView extends BorderPane {
             return Objects.equals( type, ( ( TypeReferenceView ) t.getContent( ) ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
             Tab t = new Tab( );
-            t.setText( type.getTypeDefinition( ).getInternalName( ) );
+            t.setText( type.getTypeMetadata( ).getTypeName( ) );
             t.setContent( new TypeReferenceView( TypeContainerView.this, type ) );
             
             typeReferenceTabs.getTabs( ).add( t );
