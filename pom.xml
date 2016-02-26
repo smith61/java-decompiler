@@ -71,6 +71,8 @@
 								<includes>
 									<include>org.bitbucket.mstrobel:procyon-compilertools</include>
 									<include>org.ow2.asm:asm</include>
+									<include>ch.qos.logback:logback-core</include>
+									<include>ch.qos.logback:logback-classic</include>
 								</includes>
 							</artifactSet>
 						</configuration>
