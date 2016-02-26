@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
+import javafx.application.Platform;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -39,7 +40,7 @@ public class ApplicationMenuBar extends MenuBar {
         
         MenuItem exit = new MenuItem( "Exit" );
         exit.setOnAction( ( evt ) -> {
-            getScene( ).getWindow( ).hide( );
+            Platform.exit( );
         } );
         
         fileMenu.getItems( ).addAll( open, new SeparatorMenuItem( ), exit );
