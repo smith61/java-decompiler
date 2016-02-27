@@ -6,8 +6,16 @@
 			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
 		</encoder>
 	</appender>
-
-	<root level="warn">
+	
+	<appender name="ASYNC-STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>INFO</level>
+		</filter>
 		<appender-ref ref="STDOUT" />
+		<neverBlock>true</neverBlock>
+	</appender>
+
+	<root level="info">
+		<appender-ref ref="ASYNC-STDOUT" />
 	</root>
 </configuration>
