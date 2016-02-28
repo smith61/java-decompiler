@@ -73,14 +73,14 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 	@Override
 	public void write( char ch ) {
 		this.render( ( canvas ) -> {
-			canvas.getOutputWriter( ).write( ch );
+			canvas.write( "" + ch );
 		} );
 	}
 
 	@Override
 	public void write( String text ) {
 		this.render( ( canvas ) -> {
-			canvas.getOutputWriter( ).write( text );
+			canvas.write( text );
 		} );
 	}
 
