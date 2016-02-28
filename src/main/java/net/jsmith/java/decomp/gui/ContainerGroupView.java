@@ -64,6 +64,7 @@ public class ContainerGroupView extends ScrollPane {
                         if( LOG.isInfoEnabled( ) ) {
                         	LOG.info( "Detected TypeContainerView close for container '{}'.", typeContainer.getName( ) );
                         }
+                        this.referenceResolver.removeResolver( typeContainer );
                         try {
                             typeContainer.close( );
                         }
@@ -128,6 +129,8 @@ public class ContainerGroupView extends ScrollPane {
     				containersTab.getSelectionModel( ).select( tab.get( ) );
     			}
     			else {
+    				this.referenceResolver.addResolver( container );
+    				
     				Tab t = new Tab( );
     				t.setText( container.getName( ) );
     				t.setContent( new TypeContainerView( this, container ) );
