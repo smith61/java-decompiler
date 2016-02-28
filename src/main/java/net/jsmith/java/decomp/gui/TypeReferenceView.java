@@ -4,22 +4,17 @@ import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import net.jsmith.java.decomp.container.Decompiler;
 import net.jsmith.java.decomp.container.Type;
+import net.jsmith.java.decomp.html.HtmlGenerator;
 
 public class TypeReferenceView extends BorderPane {
 
 	private static final Logger LOG = LoggerFactory.getLogger( TypeReferenceView.class );
+	private static final String TYPE_STYLESHEET = TypeReferenceView.class.getResource( "/css/type.css" ).toString( );
 	
     private final TypeContainerView containerView;
     private final Type type;
@@ -34,12 +29,13 @@ public class TypeReferenceView extends BorderPane {
         this.setCenter( this.contentView );
         
         WebEngine engine = this.contentView.getEngine( );
+    	engine.setUserStyleSheetLocation( TYPE_STYLESHEET );
         engine.loadContent( "Loading..." );
         
         if( LOG.isInfoEnabled( ) ) {
         	LOG.info( "Decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
         }
-        Decompiler.decompileType( type ).whenCompleteAsync( ( ast, err ) -> {
+        HtmlGenerator.renderToHtml( type ).whenCompleteAsync( ( html, err ) -> {
     		if( err != null ) {
     			if( LOG.isErrorEnabled( ) ) {
     				LOG.error( "Error decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ), err );
@@ -50,7 +46,7 @@ public class TypeReferenceView extends BorderPane {
             	if( LOG.isInfoEnabled( ) ) {
             		LOG.info( "Received type AST for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
             	}
-                buildViewForAST( ast );
+            	engine.loadContent( html );
             }
     	}, PlatformExecutor.INSTANCE );
     }
@@ -61,19 +57,6 @@ public class TypeReferenceView extends BorderPane {
     
     public Type getType( ) {
         return this.type;
-    }
-    
-    private void buildViewForAST( CompilationUnit ast ) {
-    	Document document = this.contentView.getEngine( ).getDocument( );
-    	Element rootElement = document.getDocumentElement( );
-    	Node body = rootElement.getElementsByTagName( "BODY" ).item( 0 );
-    	
-    	NodeList children = body.getChildNodes( );
-    	for( int i = 0; i < children.getLength( ); i++ ) {
-    		body.removeChild( children.item( i ) );
-    	}
-    	
-    	this.contentView.getEngine( ).loadContent( ast.getText( ), "text/plain" );
     }
     
 }

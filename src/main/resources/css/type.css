@@ -1,0 +1,46 @@
+body {
+	white-space: nowrap;
+	font-family: "Courier New";
+	font-size: 14px;
+	color: #1a1a1a
+}
+
+.java_indent {
+	margin-left: 40px;
+}
+.java_comment {
+	color: #008000
+}
+
+.java_keyword {
+	color: #660066;
+}
+.java_literal {
+	color: blue;
+}
+
+.java_ref_type {
+	cursor: pointer;
+	text-decoration: underline;
+}
+.java_ref_field {
+	cursor: pointer;
+	text-decoration: underline;
+}
+.java_ref_method {
+	cursor: pointer;
+	text-decoration: underline;
+}
+.java_ref_variable {
+	color: #bf7d40;
+}
+.java_ref_parameter {
+	color: #bf7d40;
+}
+
+.java_def_variable {
+	color: #bf7d40;
+}
+.java_def_parameter {
+	color: #bf7d40;
+}
