@@ -104,17 +104,55 @@ public class TypeContainerContentView extends ScrollPane {
         return node;
     }
     
+    private SortableTreeItem findTreeItem( String fullName ) {
+    	SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
+    	for( String namePart : fullName.split( "\\." ) ) {
+    		if( namePart.isEmpty( ) ) {
+    			continue;
+    		}
+    		SortableTreeItem nextNode = null;
+    		for( TreeItem< String > child : node.getChildren( ) ) {
+    			if( child.getValue( ).equals( namePart ) ) {
+    				nextNode = ( SortableTreeItem ) child;
+    				break;
+    			}
+    		}
+    		if( nextNode == null ) {
+    			return null;
+    		}
+    		node = nextNode;
+    	}
+    	return node;
+    }
+    
     private void addType( Type type ) {
+    	if( LOG.isTraceEnabled( ) ) {
+    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    	}
     	if( type.getTypeMetadata( ).getEnclosingType( ) != null ) {
     		if( LOG.isTraceEnabled( ) ) {
     			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
     		}
     		return;
     	}
-    	if( LOG.isTraceEnabled( ) ) {
-    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    	String typeName = type.getTypeMetadata( ).getTypeName( );
+    	
+    	if( typeName.contains( "$" ) ) {
+    		// Attempt to resolve a parent type that may already
+    		//  be loaded. Some java programmers decide to use '$'
+    		//  into class names so we may not find them.
+    		String fullName = type.getTypeMetadata( ).getFullName( );
+    		fullName = fullName.substring( 0, fullName.lastIndexOf( '$' ) );
+    		
+    		SortableTreeItem enclosingItem = this.findTreeItem( fullName );
+    		if( enclosingItem != null ) {
+    			typeName = typeName.substring( typeName.lastIndexOf( '$' ) + 1 );
+    			
+    			enclosingItem.addChildSorted( new ClassTreeItem( type, typeName ) );
+    			return;
+    		}
     	}
-    	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, type.getTypeMetadata( ).getTypeName( ) ) );
+    	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, typeName ) );
     }
     
     private void buildContentTree( ) {
