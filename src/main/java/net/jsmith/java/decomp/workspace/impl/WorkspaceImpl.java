@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -38,7 +39,13 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	public WorkspaceImpl( String name ) {
 		this.name = Objects.requireNonNull( name, "name" );
 		
-		this.threadPool = Executors.newCachedThreadPool( );
+		ThreadFactory dtf = Executors.defaultThreadFactory( );
+		this.threadPool = Executors.newCachedThreadPool( ( r ) -> {
+			Thread t = dtf.newThread( r );
+			t.setDaemon( true );
+			
+			return t;
+		} );
 		
 		this.containers = new ArrayList< >( );
 		
