@@ -1,10 +1,9 @@
 package net.jsmith.java.decomp.gui;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,25 +14,22 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import net.jsmith.java.decomp.container.GroupReferenceResolver;
-import net.jsmith.java.decomp.container.ReferenceResolver;
-import net.jsmith.java.decomp.container.Type;
-import net.jsmith.java.decomp.container.TypeContainer;
-import net.jsmith.java.decomp.container.TypeContainerUtils;
+import net.jsmith.java.decomp.workspace.Type;
+import net.jsmith.java.decomp.workspace.Workspace;
 
 public class ContainerGroupView extends ScrollPane {
 
 	private static final Logger LOG = LoggerFactory.getLogger( ContainerGroupView.class );
 	
+	private final Workspace workspace;
+	
     private final TabPane containersTab;
     
-    private final GroupReferenceResolver referenceResolver;
-    
-    public ContainerGroupView( ) {
+    public ContainerGroupView( Workspace workspace ) {
+    	this.workspace = Objects.requireNonNull( workspace, "workspace" );
+    	
         this.containersTab = new TabPane( );
         this.setContent( this.containersTab );
-        
-        this.referenceResolver = new GroupReferenceResolver( );
         
         this.setOnDragOver( ( evt ) -> {
             Dragboard db = evt.getDragboard( );
@@ -55,91 +51,70 @@ public class ContainerGroupView extends ScrollPane {
                 files.stream( ).forEach( this::openAndShowFile );
             }
         } );
-        
         this.containersTab.getTabs( ).addListener( ( Change< ? extends Tab > c ) -> {
-            while( c.next( ) ) {
-                if( c.wasRemoved( ) ) {
-                    for( Tab removed : c.getRemoved( ) ) {
-                        TypeContainer typeContainer = ( ( TypeContainerView ) removed.getContent( ) ).getTypeContainer( );
-                        if( LOG.isInfoEnabled( ) ) {
-                        	LOG.info( "Detected TypeContainerView close for container '{}'.", typeContainer.getName( ) );
-                        }
-                        this.referenceResolver.removeResolver( typeContainer );
-                        try {
-                            typeContainer.close( );
-                        }
-                        catch( IOException ioe ) {
-                        	if( LOG.isErrorEnabled( ) ) {
-                        		LOG.error( "Error closing container '{}'.", typeContainer.getName( ), ioe );
-                        	}
-                            ErrorDialog.displayError( "Error closing TypeContainer", "Error closing TypeContainer: " + typeContainer.getName( ), ioe );
-                        }
-                    }
-                }
-            }
+        	while( c.next( ) ) {
+        		if( c.wasRemoved( ) ) {
+        			for( Tab removed : c.getRemoved( ) ) {
+        				ContainerView cv = ( ContainerView ) removed.getContent( );
+        				cv.getContainer( ).close( );
+        			}
+        		}
+        	}
         } );
+        
+        workspace.setErrorListener( ListenerUtils.onFXThread( ( err ) -> {
+        	ErrorDialog.displayError( "Error in workspace", "Error in workspace threads.", err );
+        } ) );
+        workspace.setContainerClosedListener( ListenerUtils.onFXThread( ( container ) -> {
+        	if( LOG.isInfoEnabled( ) ) {
+        		LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
+        	}
+        	this.containersTab.getTabs( ).stream( ).filter( ( tab ) -> {
+        		return ( ( ContainerView ) tab.getContent( ) ).getContainer( ) == container;
+        	} ).findFirst( ).ifPresent( ( tab ) -> {
+        		this.containersTab.getTabs( ).remove( tab );
+        	} );
+        } ) );
+        workspace.setContainerOpenedListener( ListenerUtils.onFXThread( ( container ) -> {
+        	if( LOG.isInfoEnabled( ) ) {
+        		LOG.info( "Received container opened event for container '{}'.", container.getName( ) );
+        	}
+        	Tab tab = new Tab( );
+        	tab.setText( container.getName( ) );
+        	tab.setContent( new ContainerView( this, container ) );
+        	
+        	this.containersTab.getTabs( ).add( tab );
+        	this.containersTab.getSelectionModel( ).select( tab );
+        } ) );
     }
     
-    public ReferenceResolver getReferenceResolver( ) {
-        return this.referenceResolver;
+    public Workspace getWorkspace( ) {
+    	return this.workspace;
     }
     
     public void openAndShowType( Type type ) {
     	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     	}
         Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-            TypeContainerView view = ( TypeContainerView ) t.getContent( );
-            return view.getTypeContainer( ) == type.getOwningContainer( );
+            ContainerView view = ( ContainerView ) t.getContent( );
+            return view.getContainer( ) == type.getContainer( );
         } ).findFirst( ).orElseThrow( ( ) -> {
         	if( LOG.isWarnEnabled( ) ) {
-        		LOG.warn( "Could not find container window for container '{}'.", type.getOwningContainer( ).getName( ) );
+        		LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
         	}
-            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getOwningContainer( ).getName( ) );
+            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getContainer( ).getName( ) );
         } );
         
         this.containersTab.getSelectionModel( ).select( tab );
-        ( ( TypeContainerView ) tab.getContent( ) ).openAndShowType( type );
+        ( ( ContainerView ) tab.getContent( ) ).openAndShowType( type );
     }
     
     public void openAndShowFile( File file ) {
     	if( LOG.isInfoEnabled( ) ) {
     		LOG.info( "Opening and showing file '{}'.", file );
     	}
-    	TypeContainerUtils.createTypeContainerFromJar( Paths.get( file.toURI( ) ) ).whenCompleteAsync( ( container, err ) -> {
-    		if( err != null ) {
-    			if( LOG.isErrorEnabled( ) ) {
-    				LOG.error( "Error loading container from file '{}'.", file, err );
-    			}
-    			ErrorDialog.displayError( "Error loading type container", "Error loading type container from file: " + file, err );
-    		}
-    		else {
-    			Optional< Tab > tab = containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-    				TypeContainerView view = ( TypeContainerView ) t.getContent( );
-    				return view.getTypeContainer( ).getName( ).equals( container.getName( ) );
-    			} ).findFirst( );
-    			if( tab.isPresent( ) ) {
-    				if( LOG.isWarnEnabled( ) ) {
-    					LOG.warn( "Type container already loaded with name '{}'.", container.getName( ) );
-    				}
-    				try {
-    					container.close( );
-    				}
-    				catch( IOException ioe ) { }
-    				containersTab.getSelectionModel( ).select( tab.get( ) );
-    			}
-    			else {
-    				this.referenceResolver.addResolver( container );
-    				
-    				Tab t = new Tab( );
-    				t.setText( container.getName( ) );
-    				t.setContent( new TypeContainerView( this, container ) );
-    				
-    				containersTab.getTabs( ).add( t );
-    				containersTab.getSelectionModel( ).select( t );
-    			}
-    		}
-    	}, PlatformExecutor.INSTANCE );
+    	this.getWorkspace( ).openContainerAtPath( Paths.get( file.toURI( ) ) );
     }
     
 }

@@ -8,24 +8,24 @@ import org.slf4j.LoggerFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import net.jsmith.java.decomp.container.Type;
-import net.jsmith.java.decomp.container.TypeContainer;
+import net.jsmith.java.decomp.workspace.Container;
+import net.jsmith.java.decomp.workspace.Type;
 
-public class TypeContainerView extends BorderPane {
+public class ContainerView extends BorderPane {
 	
-	private static final Logger LOG = LoggerFactory.getLogger( TypeContainerView.class );
+	private static final Logger LOG = LoggerFactory.getLogger( ContainerView.class );
 
     private final ContainerGroupView containerGroup;
-    private final TypeContainer container;
+    private final Container container;
     
-    private final TypeContainerContentView contentView;
+    private final ContainerContentView contentView;
     private final TabPane typeReferenceTabs;
     
-    public TypeContainerView( ContainerGroupView containerGroup, TypeContainer container ) {
+    public ContainerView( ContainerGroupView containerGroup, Container container ) {
         this.containerGroup = Objects.requireNonNull( containerGroup, "containerGroup" );
         this.container = Objects.requireNonNull( container, "container" );
         
-        this.contentView = new TypeContainerContentView( this );
+        this.contentView = new ContainerContentView( this );
         this.contentView.setFitToHeight( true );
         
         this.typeReferenceTabs = new TabPane( );
@@ -38,27 +38,27 @@ public class TypeContainerView extends BorderPane {
         return this.containerGroup;
     }
     
-    public TypeContainer getTypeContainer( ) {
+    public Container getContainer( ) {
         return this.container;
     }
     
     public void openAndShowType( Type type ) {
-        if( type.getOwningContainer( ) != this.container ) {
+        if( type.getContainer( ) != this.container ) {
         	if( LOG.isErrorEnabled( ) ) {
-        		LOG.error( "Attempted to open type '{}' in container '{}' into container view for '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ), this.container.getName( ) );
+        		LOG.error( "Attempted to open type '{}' in container '{}' into container view for '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), this.container.getName( ) );
         	}
             throw new IllegalArgumentException( "Attempted to load reference into wrong view." );
         }
     	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     	}
         
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            return Objects.equals( type, ( ( TypeReferenceView ) t.getContent( ) ).getType( ) );
+            return Objects.equals( type, ( ( TypeView ) t.getContent( ) ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
             Tab t = new Tab( );
-            t.setText( type.getTypeMetadata( ).getTypeName( ) );
-            t.setContent( new TypeReferenceView( TypeContainerView.this, type ) );
+            t.setText( type.getMetadata( ).getTypeName( ) );
+            t.setContent( new TypeView( ContainerView.this, type ) );
             
             typeReferenceTabs.getTabs( ).add( t );
             return t;

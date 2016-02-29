@@ -1,6 +1,5 @@
 package net.jsmith.java.decomp.gui;
 
-import java.util.List;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -14,20 +13,20 @@ import org.w3c.dom.events.EventTarget;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
-import net.jsmith.java.decomp.container.Type;
-import net.jsmith.java.decomp.html.HtmlGenerator;
+import net.jsmith.java.decomp.decompiler.DecompilerUtils;
+import net.jsmith.java.decomp.workspace.Type;
 
-public class TypeReferenceView extends BorderPane {
+public class TypeView extends BorderPane {
 
-	private static final Logger LOG = LoggerFactory.getLogger( TypeReferenceView.class );
-	private static final String TYPE_STYLESHEET = TypeReferenceView.class.getResource( "/css/type.css" ).toString( );
+	private static final Logger LOG = LoggerFactory.getLogger( TypeView.class );
+	private static final String TYPE_STYLESHEET = TypeView.class.getResource( "/css/type.css" ).toString( );
 	
-    private final TypeContainerView containerView;
+    private final ContainerView containerView;
     private final Type type;
     
     private final WebView contentView;
     
-    public TypeReferenceView( TypeContainerView containerView, Type type ) {
+    public TypeView( ContainerView containerView, Type type ) {
         this.containerView = Objects.requireNonNull( containerView, "containerView" );
         this.type = Objects.requireNonNull( type, "type" );
         
@@ -45,25 +44,25 @@ public class TypeReferenceView extends BorderPane {
         } );
         
         if( LOG.isInfoEnabled( ) ) {
-        	LOG.info( "Decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+        	LOG.info( "Decompiling type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
         }
-        HtmlGenerator.renderToHtml( type ).whenCompleteAsync( ( html, err ) -> {
+        DecompilerUtils.defaultDecompile( type ).whenCompleteAsync( ( html, err ) -> {
     		if( err != null ) {
     			if( LOG.isErrorEnabled( ) ) {
-    				LOG.error( "Error decompiling type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ), err );
+    				LOG.error( "Error decompiling type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), err );
     			}
-                ErrorDialog.displayError( "Error loading AST.", "Error loading AST for type: " + type.getTypeMetadata( ).getFullName( ), err );
+                ErrorDialog.displayError( "Error decompiling type", "Error decompiling type: " + type.getMetadata( ).getFullName( ), err );
             }
             else {
             	if( LOG.isInfoEnabled( ) ) {
-            		LOG.info( "Received type AST for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+            		LOG.info( "Received html for type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
             	}
             	engine.loadContent( html );
             }
     	}, PlatformExecutor.INSTANCE );
     }
     
-    public TypeContainerView getContainerView( ) {
+    public ContainerView getContainerView( ) {
         return this.containerView;
     }
     
@@ -94,18 +93,10 @@ public class TypeReferenceView extends BorderPane {
     }
     
     private void handleTypeReference( String typeName ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Handling type reference for type '{}'.", typeName );
-    	}
-    	ContainerGroupView group = this.getContainerView( ).getContainerGroup( );
-		List< Type > resolvedTypes = group.getReferenceResolver( ).resolveType( typeName );
-		if( LOG.isInfoEnabled( ) ) {
-			LOG.info( "Resolved '{}' instances for type '{}'.", resolvedTypes.size( ), typeName );
-		}
-		if( resolvedTypes.size( ) >= 1 ) {
-			// TODO: Handle multiple resolved types.
-			group.openAndShowType( resolvedTypes.get( 0 ) );
-		}
+//    	if( LOG.isInfoEnabled( ) ) {
+//    		LOG.info( "Handling type reference for type '{}'.", typeName );
+//    	}
+    	
     }
     
 }

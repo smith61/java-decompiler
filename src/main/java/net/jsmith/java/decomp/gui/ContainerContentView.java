@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.collections.MapChangeListener.Change;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -15,43 +14,35 @@ import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import net.jsmith.java.decomp.container.Type;
-import net.jsmith.java.decomp.container.TypeContainer;
-import net.jsmith.java.decomp.container.TypeMetadata;
+import net.jsmith.java.decomp.workspace.Metadata;
+import net.jsmith.java.decomp.workspace.Modifier;
+import net.jsmith.java.decomp.workspace.Type;
 
-public class TypeContainerContentView extends ScrollPane {
+public class ContainerContentView extends ScrollPane {
 
-	private static final Logger LOG = LoggerFactory.getLogger( TypeContainerContentView.class );
+	private static final Logger LOG = LoggerFactory.getLogger( ContainerContentView.class );
 	
-    private final TypeContainerView containerView;
+    private final ContainerView containerView;
     
     private final TreeView< String > contentTree;
     
-    public TypeContainerContentView( TypeContainerView containerView ) {
+    public ContainerContentView( ContainerView containerView ) {
         this.containerView = Objects.requireNonNull( containerView, "containerView" );
         
-        TypeContainer typeContainer = containerView.getTypeContainer( );
         this.contentTree = new TreeView< >( new PackageTreeItem( "" ) );
         this.contentTree.setShowRoot( false );
         
         this.setContent( this.contentTree );
-        
-        typeContainer.getContainedTypes( ).addListener( ( Change< ? extends String, ? extends Type > change ) -> {
-        	if( change.wasAdded( ) ) {
-            	this.addType( change.getValueAdded( ) );
-        	}
-        } );
-        buildContentTree( );
         
         this.contentTree.setCellFactory( ( tree ) -> {
         	TreeCell< String > cell = new TextFieldTreeCell< >( );
         	cell.setOnMouseClicked( ( evt ) -> {
         		if( evt.getButton( ) == MouseButton.PRIMARY ) {
         			TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
-	                if( selectedItem instanceof ClassTreeItem ) {
-	                	Type type = ( ( ClassTreeItem ) selectedItem ).typeReference;
+	                if( selectedItem instanceof TypeTreeItem ) {
+	                	Type type = ( ( TypeTreeItem ) selectedItem ).type;
 	                	if( LOG.isDebugEnabled( ) ) {
-	                		LOG.debug( "Recieved click event on ClassTreeItem for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+	                		LOG.debug( "Recieved click event on ClassTreeItem for type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
 	                	}
 	                	containerView.openAndShowType( type );
 	                }
@@ -63,10 +54,10 @@ public class TypeContainerContentView extends ScrollPane {
         this.contentTree.setOnKeyPressed( ( evt ) -> {
             if( evt.getCode( ) == KeyCode.ENTER ) {
                 TreeItem< String > selectedItem = contentTree.getSelectionModel( ).getSelectedItem( );
-                if( selectedItem instanceof ClassTreeItem ) {
-                	Type type = ( ( ClassTreeItem ) selectedItem ).typeReference;
+                if( selectedItem instanceof TypeTreeItem ) {
+                	Type type = ( ( TypeTreeItem ) selectedItem ).type;
                 	if( LOG.isDebugEnabled( ) ) {
-                		LOG.debug( "Recieved key event on ClassTreeItem for type '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+                		LOG.debug( "Recieved key event on ClassTreeItem for type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
                 	}
                     containerView.openAndShowType( type );
                 }
@@ -75,15 +66,17 @@ public class TypeContainerContentView extends ScrollPane {
                 }
             }
         } );
+        
+        containerView.getContainer( ).setOnTypeLoadedListener( ListenerUtils.onFXThread( this::addType ) );
     }
     
-    public TypeContainerView getContainerView( ) {
+    public ContainerView getContainerView( ) {
         return this.containerView;
     }
     
     private SortableTreeItem getPackageTreeItem( Type typeReference ) {
         SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-        for( String pkgPart : typeReference.getTypeMetadata( ).getPackage( ).split( "\\." ) ) {
+        for( String pkgPart : typeReference.getMetadata( ).getPackageName( ).split( "\\." ) ) {
             if( pkgPart.isEmpty( ) ) {
                 continue;
             }
@@ -127,39 +120,32 @@ public class TypeContainerContentView extends ScrollPane {
     
     private void addType( Type type ) {
     	if( LOG.isTraceEnabled( ) ) {
-    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     	}
-    	if( type.getTypeMetadata( ).getEnclosingType( ) != null ) {
+    	if( type.getMetadata( ).getEnclosingType( ) != null ) {
     		if( LOG.isTraceEnabled( ) ) {
-    			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", type.getTypeMetadata( ).getFullName( ), type.getOwningContainer( ).getName( ) );
+    			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     		}
     		return;
     	}
-    	String typeName = type.getTypeMetadata( ).getTypeName( );
+    	String typeName = type.getMetadata( ).getTypeName( );
     	
     	if( typeName.contains( "$" ) ) {
     		// Attempt to resolve a parent type that may already
     		//  be loaded. Some java programmers decide to use '$'
     		//  into class names so we may not find them.
-    		String fullName = type.getTypeMetadata( ).getFullName( );
+    		String fullName = type.getMetadata( ).getFullName( );
     		fullName = fullName.substring( 0, fullName.lastIndexOf( '$' ) );
     		
     		SortableTreeItem enclosingItem = this.findTreeItem( fullName );
     		if( enclosingItem != null ) {
     			typeName = typeName.substring( typeName.lastIndexOf( '$' ) + 1 );
     			
-    			enclosingItem.addChildSorted( new ClassTreeItem( type, typeName ) );
+    			enclosingItem.addChildSorted( new TypeTreeItem( type, typeName ) );
     			return;
     		}
     	}
-    	getPackageTreeItem( type ).addChildSorted( new ClassTreeItem( type, typeName ) );
-    }
-    
-    private void buildContentTree( ) {
-    	TypeContainer container = this.containerView.getTypeContainer( );
-    	
-    	this.contentTree.setRoot( new PackageTreeItem( container.getName( ) ) );
-    	container.getContainedTypes( ).values( ).stream( ).forEach( this::addType );
+    	getPackageTreeItem( type ).addChildSorted( new TypeTreeItem( type, typeName ) );
     }
     
     private abstract class SortableTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {
@@ -214,17 +200,17 @@ public class TypeContainerContentView extends ScrollPane {
         
     }
     
-    private class ClassTreeItem extends SortableTreeItem {
+    private class TypeTreeItem extends SortableTreeItem {
         
-        private final Type typeReference;
+        private final Type type;
         
-        public ClassTreeItem( Type typeReference, String className ) {
+        public TypeTreeItem( Type typeReference, String className ) {
             super( className );
             
-            this.typeReference = typeReference;
+            this.type = typeReference;
             
-            TypeMetadata metadata = typeReference.getTypeMetadata( );
-            if( metadata.isInterface( ) ) {
+            Metadata metadata = typeReference.getMetadata( );
+            if( Modifier.isInterface( metadata.getModifiers( ) ) ) {
             	this.setGraphic( new ImageView( Icons.INTERFACE_ICON ) );
             }
             else {

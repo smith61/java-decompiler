@@ -4,6 +4,8 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import net.jsmith.java.decomp.workspace.Workspace;
+import net.jsmith.java.decomp.workspace.impl.WorkspaceImpl;
 
 public class Application extends javafx.application.Application {
     
@@ -17,7 +19,8 @@ public class Application extends javafx.application.Application {
         
         VBox root = new VBox( );
         
-        ContainerGroupView containerGroup = new ContainerGroupView( );
+        Workspace defaultWorkspace = new WorkspaceImpl( "default" );
+        ContainerGroupView containerGroup = new ContainerGroupView( defaultWorkspace );
         containerGroup.setFitToHeight( true );
         containerGroup.setFitToWidth( true );
         
