@@ -15,14 +15,14 @@ public class ContainerView extends BorderPane {
 	
 	private static final Logger LOG = LoggerFactory.getLogger( ContainerView.class );
 
-    private final ContainerGroupView containerGroup;
+    private final WorkspaceView workspaceView;
     private final Container container;
     
     private final ContainerContentView contentView;
     private final TabPane typeReferenceTabs;
     
-    public ContainerView( ContainerGroupView containerGroup, Container container ) {
-        this.containerGroup = Objects.requireNonNull( containerGroup, "containerGroup" );
+    public ContainerView( WorkspaceView containerGroup, Container container ) {
+        this.workspaceView = Objects.requireNonNull( containerGroup, "containerGroup" );
         this.container = Objects.requireNonNull( container, "container" );
         
         this.contentView = new ContainerContentView( this );
@@ -34,8 +34,8 @@ public class ContainerView extends BorderPane {
         this.setCenter( this.typeReferenceTabs );
     }
     
-    public ContainerGroupView getContainerGroup( ) {
-        return this.containerGroup;
+    public WorkspaceView getWorkspaceView( ) {
+        return this.workspaceView;
     }
     
     public Container getContainer( ) {
