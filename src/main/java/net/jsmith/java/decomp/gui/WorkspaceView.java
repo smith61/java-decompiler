@@ -17,15 +17,15 @@ import javafx.scene.input.TransferMode;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
-public class ContainerGroupView extends ScrollPane {
+public class WorkspaceView extends ScrollPane {
 
-	private static final Logger LOG = LoggerFactory.getLogger( ContainerGroupView.class );
+	private static final Logger LOG = LoggerFactory.getLogger( WorkspaceView.class );
 	
 	private final Workspace workspace;
 	
     private final TabPane containersTab;
     
-    public ContainerGroupView( Workspace workspace ) {
+    public WorkspaceView( Workspace workspace ) {
     	this.workspace = Objects.requireNonNull( workspace, "workspace" );
     	
         this.containersTab = new TabPane( );
