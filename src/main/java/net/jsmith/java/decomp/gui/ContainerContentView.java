@@ -99,7 +99,8 @@ public class ContainerContentView extends ScrollPane {
     
     private SortableTreeItem findTreeItem( String fullName ) {
     	SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-    	for( String namePart : fullName.split( "\\." ) ) {
+    	
+    	for( String namePart : fullName.split( "[\\.\\$]" ) ) {
     		if( namePart.isEmpty( ) ) {
     			continue;
     		}
