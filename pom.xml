@@ -5,41 +5,56 @@
 	<artifactId>java-decomp</artifactId>
 	<version>1.0.0</version>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		
+		<procyon.version>0.5.32</procyon.version>
+		<asm.version>5.0.4</asm.version>
+		<slf4j.version>1.7.16</slf4j.version>
+		<logback.version>1.1.5</logback.version>
+		<rendersnake.version>1.9.0</rendersnake.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.bitbucket.mstrobel</groupId>
 			<artifactId>procyon-compilertools</artifactId>
-			<version>0.5.32</version>
+			<version>${procyon.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ow2.asm</groupId>
 			<artifactId>asm</artifactId>
-			<version>5.0.4</version>
+			<version>${asm.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.16</version>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
-			<version>1.1.5</version>
+			<version>${logback.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.1.5</version>
+			<version>${logback.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rendersnake</groupId>
 			<artifactId>rendersnake</artifactId>
-			<version>1.9.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
+			<version>${rendersnake.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>spring-webmvc</artifactId>
+					<groupId>org.springframework</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>servlet-api</artifactId>
+					<groupId>javax.servlet</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 
@@ -78,12 +93,9 @@
 						</goals>
 						<configuration>
 							<artifactSet>
-								<includes>
-									<include>org.bitbucket.mstrobel:procyon-compilertools</include>
-									<include>org.ow2.asm:asm</include>
-									<include>ch.qos.logback:logback-core</include>
-									<include>ch.qos.logback:logback-classic</include>
-								</includes>
+								<excludes>
+									<exclude>junit:junit</exclude>
+								</excludes>
 							</artifactSet>
 						</configuration>
 					</execution>
