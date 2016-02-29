@@ -37,6 +37,9 @@ public class NIO2Container extends AbstractContainer {
 	@Override
 	protected InputStream getInputStream( String typeName ) throws IOException {
 		Path path = this.rootPath.resolve( typeName.replace( '.', '/' ) + ".class" );
+		if( !Files.isRegularFile( path ) ) {
+			return null;
+		}
 		return Files.newInputStream( path );
 	}
 	

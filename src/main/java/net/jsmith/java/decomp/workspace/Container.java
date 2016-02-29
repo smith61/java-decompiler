@@ -9,10 +9,11 @@ public interface Container {
 	
 	Workspace getWorkspace( );
 	
+	Type findType( String typeName );
+	
 	List< Type > getContainedTypes( );
 	
 	void close( );
-	
 	
 	void setOnTypeLoadedListener( Consumer< ? super Type > l );
 	

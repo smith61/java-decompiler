@@ -45,6 +45,20 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 	}
 	
 	@Override
+	public final Type findType( String typeName ) {
+		return this.withReference( ( ) -> {
+			synchronized( this.loadedTypes ) {
+				for( Type type : this.loadedTypes ) {
+					if( type.getMetadata( ).getFullName( ).equals( typeName ) ) {
+						return type;
+					}
+				}
+				return null;
+			}
+		} );
+	}
+	
+	@Override
 	public final List< Type > getContainedTypes( ) {
 		return this.withReference( ( ) -> {
 			synchronized( this.loadedTypes ) {
