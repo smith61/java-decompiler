@@ -32,7 +32,12 @@ public class TypeView extends BorderPane {
         this.type = Objects.requireNonNull( type, "type" );
         
         this.contentView = new WebView( );
+        this.contentView.setOnDragEntered( null );
+        this.contentView.setOnDragExited( null );
         this.contentView.setOnDragOver( null );
+        this.contentView.setOnDragDropped( null );
+        this.contentView.setOnDragDetected( null );
+        this.contentView.setOnDragDone( null );
         
         this.setCenter( this.contentView );
         
