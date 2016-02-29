@@ -31,6 +31,10 @@ public class Application extends javafx.application.Application {
         
         primaryStage.setScene( new Scene( root, 600, 480 ) );
         primaryStage.show( );
+        
+        primaryStage.setOnHidden( ( evt ) -> {
+        	defaultWorkspace.close( );
+        } );
     }
     
 }

@@ -124,6 +124,10 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 	protected void implClose( ) {
 		this.workspace.removeContainer( this );
 		this.workspace.decReference( );
+		
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Container with name '{}' closed.", this.getName( ) );
+		}
 	}
 	
 	protected abstract InputStream getInputStream( String typeName ) throws IOException;

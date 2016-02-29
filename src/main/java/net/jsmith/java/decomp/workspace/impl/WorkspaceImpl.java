@@ -183,6 +183,10 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 
 	protected void implClose( ) {
 		this.threadPool.shutdown( );
+		
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Workspace with name '{}' closed.", this.getName( ) );
+		}
 	}
 	
 }
