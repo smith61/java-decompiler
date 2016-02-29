@@ -87,10 +87,12 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	@Override
 	public void close( ) {
 		super.close( );
+		List< AbstractContainer > clone;
 		synchronized( this.containers ) {
-			for( Container container : this.containers ) {
-				container.close( );
-			}
+			clone = new ArrayList< >( this.containers );
+		}
+		for( Container container : clone ) {
+			container.close( );
 		}
 	}
 	
