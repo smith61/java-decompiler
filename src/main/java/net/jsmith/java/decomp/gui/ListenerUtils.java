@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import net.jsmith.java.decomp.utils.ThreadPools;
+
 public class ListenerUtils {
 
 	public static < T > Consumer< T > onFXThread( Consumer< T > l ) {
@@ -15,7 +17,7 @@ public class ListenerUtils {
 				pendingEvents.add( evt );
 			}
 			if( scheduleUpdate ) {
-				PlatformExecutor.INSTANCE.execute( ( ) -> {
+				ThreadPools.PLATFORM.execute( ( ) -> {
 					List< T > events;
 					synchronized( pendingEvents ) {
 						events = new ArrayList< >( pendingEvents );

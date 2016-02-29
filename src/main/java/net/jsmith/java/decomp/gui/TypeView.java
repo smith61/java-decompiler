@@ -14,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
+import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
@@ -67,7 +68,7 @@ public class TypeView extends BorderPane {
             	}
             	engine.loadContent( html );
             }
-    	}, PlatformExecutor.INSTANCE );
+    	}, ThreadPools.PLATFORM );
     }
     
     public ContainerView getContainerView( ) {
@@ -122,7 +123,7 @@ public class TypeView extends BorderPane {
     				workspaceView.openAndShowType( types.get( 0 ) );
     			}
     		}
-    	}, PlatformExecutor.INSTANCE );
+    	}, ThreadPools.PLATFORM );
     }
     
 }

@@ -13,6 +13,7 @@ import com.strobel.decompiler.DecompilationOptions;
 import com.strobel.decompiler.languages.java.JavaLanguage;
 
 import net.jsmith.java.decomp.decompiler.Decompiler;
+import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
 
@@ -29,7 +30,7 @@ public class ProcyonDecompiler implements Decompiler {
 
 	@Override
 	public CompletableFuture< String > decompile( Type type ) {
-		return CompletableFuture.supplyAsync( ( ) -> {
+		return ThreadPools.supplyBackground( ( ) -> {
 			if( LOG.isInfoEnabled( ) ) {
 				LOG.info( "Decompiling type '{}' with procyon decompiler.", type.getMetadata( ).getFullName( ) );
 			}
