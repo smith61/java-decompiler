@@ -1,6 +1,10 @@
 package net.jsmith.java.decomp.workspace.impl;
 
+import java.util.concurrent.CompletableFuture;
+
 import com.strobel.functions.Supplier;
+
+import net.jsmith.java.decomp.utils.ThreadPools;
 
 public abstract class Referenceable {
 
@@ -9,17 +13,17 @@ public abstract class Referenceable {
 	private boolean closed = false;
 	
 	public void close( ) {
-		boolean scheduleClose = false;
+		boolean doClose = false;
 		synchronized( LOCK ) {
 			if( this.closed ) {
 				return;
 			}
 			this.closed = true;
 			
-			scheduleClose = this.numReferences == 0;
+			doClose = this.numReferences == 0;
 		}
-		if( scheduleClose ) {
-			this.scheduleClose( );
+		if( doClose ) {
+			this.implClose( );
 		}
 	}
 	
@@ -33,6 +37,30 @@ public abstract class Referenceable {
 		}
 	}
 	
+	public final CompletableFuture< Void > withReferenceAsync( Runnable runnable ) {
+		return ThreadPools.runBackground( ( ) -> {
+			this.incReference( );
+			try {
+				runnable.run( );
+			}
+			finally {
+				this.decReference( );
+			}
+		} );
+	}
+	
+	public final < R > CompletableFuture< R > withReferenceAsync( Supplier< ? extends R > supplier ) {
+		return ThreadPools.supplyBackground( ( ) -> {
+			this.incReference( );
+			try {
+				return supplier.get( );
+			}
+			finally {
+				this.decReference( );
+			}
+		} );
+	}
+	
 	public final void incReference( ) {
 		synchronized( LOCK ) {
 			if( this.closed ) {
@@ -43,18 +71,18 @@ public abstract class Referenceable {
 	}
 	
 	public final void decReference( ) {
-		boolean scheduleClose = false;
+		boolean doClose = false;
 		synchronized( LOCK ) {
 			this.numReferences -= 1;
 			if( this.closed ) {
-				scheduleClose = this.numReferences == 0;
+				doClose = this.numReferences == 0;
 			}
 		}
-		if( scheduleClose ) {
-			this.scheduleClose( );
+		if( doClose ) {
+			this.implClose( );
 		}
 	}
 	
-	protected abstract void scheduleClose( );
+	protected abstract void implClose( );
 	
 }

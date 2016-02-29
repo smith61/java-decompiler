@@ -85,11 +85,6 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 		} );
 	}
 	
-	@Override
-	protected final void scheduleClose( ) {
-		this.workspace.schedule( this::implClose );
-	}
-	
 	protected final void loadType( String typeName ) {
 		if( LOG.isDebugEnabled( ) ) {
 			LOG.debug( "Loading type with name '{}' into container '{}'.", typeName, this.getName( ) );

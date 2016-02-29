@@ -30,8 +30,7 @@ public class NIO2Container extends AbstractContainer {
 		this.fileSystem = Objects.requireNonNull( fileSystem, "fileSystem" );
 		this.rootPath = Objects.requireNonNull( rootPath, "rootPath" );
 		
-		this.incReference( );
-		workspace.schedule( this::loadAllTypes );
+		this.withReferenceAsync( this::loadAllTypes );
 	}
 
 	@Override
@@ -72,8 +71,6 @@ public class NIO2Container extends AbstractContainer {
 		}
 		finally {
 			IOUtils.safeClose( stream );
-			
-			this.decReference( );
 		}
 	}
 	

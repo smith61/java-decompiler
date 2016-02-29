@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -27,8 +24,6 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	
 	private final Logger LOG = LoggerFactory.getLogger( WorkspaceImpl.class );
 	
-	private final ExecutorService threadPool;
-	
 	private final String name;
 	private final List< AbstractContainer > containers;
 	
@@ -38,14 +33,6 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	
 	public WorkspaceImpl( String name ) {
 		this.name = Objects.requireNonNull( name, "name" );
-		
-		ThreadFactory dtf = Executors.defaultThreadFactory( );
-		this.threadPool = Executors.newCachedThreadPool( ( r ) -> {
-			Thread t = dtf.newThread( r );
-			t.setDaemon( true );
-			
-			return t;
-		} );
 		
 		this.containers = new ArrayList< >( );
 		
@@ -70,8 +57,7 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	
 	@Override
 	public void openContainerAtPath( Path path ) {
-		this.incReference( );
-		this.schedule( ( ) -> {
+		this.withReferenceAsync( ( ) -> {
 			if( LOG.isDebugEnabled( ) ) {
 				LOG.debug( "Opening container at path '{}' into workspace '{}'.", path, this.getName( ) );
 			}
@@ -95,9 +81,6 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 				}
 				this.onError( err );
 			}
-			finally {
-				this.decReference( );
-			}
 		} );
 	}
 	
@@ -113,21 +96,17 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	
 	@Override
 	public CompletableFuture< List< Type > > resolveType( String typeName ) {
-		return this.withReference( ( ) -> {
-			return CompletableFuture.supplyAsync( ( ) -> {
-				return this.withReference( ( ) -> {
-					List< Type > types = new ArrayList< >( );
-					synchronized( this.containers ) {
-						for( Container container : this.containers ) {
-							Type type = container.findType( typeName );
-							if( type != null ) {
-								types.add( type );
-							}
-						}
+		return this.withReferenceAsync( ( ) -> {
+			List< Type > types = new ArrayList< >( );
+			synchronized( this.containers ) {
+				for( Container container : this.containers ) {
+					Type type = container.findType( typeName );
+					if( type != null ) {
+						types.add( type );
 					}
-					return types;
-				} );
-			}, this.threadPool );
+				}
+			}
+			return types;
 		} );
 	}
 
@@ -162,20 +141,11 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 		} );
 	}
 	
-	@Override
-	protected final void scheduleClose( ) {
-		this.schedule( this::implClose );
-	}
-	
 	protected final void onError( Throwable t ) {
 		Consumer< ? super Throwable > listener = this.errorListener.get( );
 		if( listener != null ) {
 			listener.accept( t );
 		}
-	}
-	
-	protected final void schedule( Runnable runnable ) {
-		this.threadPool.submit( runnable );
 	}
 	
 	protected final void removeContainer( AbstractContainer container ) {
@@ -189,8 +159,6 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	}
 
 	protected void implClose( ) {
-		this.threadPool.shutdown( );
-		
 		if( LOG.isInfoEnabled( ) ) {
 			LOG.info( "Workspace with name '{}' closed.", this.getName( ) );
 		}

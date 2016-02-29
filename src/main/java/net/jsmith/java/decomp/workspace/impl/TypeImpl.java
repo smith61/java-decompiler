@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Metadata;
 import net.jsmith.java.decomp.workspace.Type;
@@ -31,23 +32,18 @@ public class TypeImpl implements Type {
 
 	@Override
 	public CompletableFuture< InputStream > getInputStream( ) {
-		CompletableFuture< InputStream > promise = new CompletableFuture< >( );
-		this.owningContainer.getWorkspace( ).schedule( ( ) -> {
+		return ThreadPools.supplyBackground( ( ) -> {
 			this.owningContainer.incReference( );
 			try {
-				InputStream is = this.owningContainer.getInputStream( this.metadata.getFullName( ) );
-				promise.complete( new ContainerInputStream( this.owningContainer, is ) );
+				return this.owningContainer.getInputStream( this.metadata.getFullName( ) );
 			}
 			catch( IOException ioe ) {
-				promise.completeExceptionally( ioe );
+				throw new RuntimeException( ioe );
 			}
 			finally {
 				this.owningContainer.decReference( );
 			}
 		} );
-		
-		
-		return promise;
 	}
 
 }
