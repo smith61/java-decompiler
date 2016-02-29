@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import net.jsmith.java.decomp.utils.IOUtils;
+
 public class ContainerInputStream extends InputStream {
 
 	private final AbstractContainer container;
@@ -17,6 +19,8 @@ public class ContainerInputStream extends InputStream {
 		this.delegate = Objects.requireNonNull( delegate, "delegate" );
 		
 		this.isClosed = new AtomicBoolean( false );
+		
+		this.container.incReference( );
 	}
 	
 	@Override
@@ -31,7 +35,7 @@ public class ContainerInputStream extends InputStream {
 
 	@Override
 	public void close( ) throws IOException {
-		if( !this.isClosed.getAndSet( true ) ) {
+		if( this.isClosed.getAndSet( true ) ) {
 			return;
 		}
 		try {
@@ -40,6 +44,11 @@ public class ContainerInputStream extends InputStream {
 		finally {
 			this.container.decReference( );
 		}
+	}
+	
+	@Override
+	public void finalize( ) {
+		IOUtils.safeClose( this );
 	}
 	
 }

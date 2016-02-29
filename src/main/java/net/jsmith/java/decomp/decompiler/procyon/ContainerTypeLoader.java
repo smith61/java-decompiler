@@ -55,6 +55,9 @@ public class ContainerTypeLoader implements ITypeLoader {
 			}
 			return false;
 		}
+		finally {
+			IOUtils.safeClose( is );
+		}
 	}
 	
 	public MetadataSystem getMetadataSystem( ) {

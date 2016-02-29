@@ -32,6 +32,8 @@ public class TypeView extends BorderPane {
         this.type = Objects.requireNonNull( type, "type" );
         
         this.contentView = new WebView( );
+        this.contentView.setOnDragOver( null );
+        
         this.setCenter( this.contentView );
         
         WebEngine engine = this.contentView.getEngine( );

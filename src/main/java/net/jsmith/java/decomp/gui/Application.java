@@ -34,6 +34,7 @@ public class Application extends javafx.application.Application {
         
         primaryStage.setOnHidden( ( evt ) -> {
         	defaultWorkspace.close( );
+        	System.gc( );
         } );
     }
     

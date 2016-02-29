@@ -32,15 +32,17 @@ public class TypeImpl implements Type {
 	@Override
 	public CompletableFuture< InputStream > getInputStream( ) {
 		CompletableFuture< InputStream > promise = new CompletableFuture< >( );
-		
-		this.owningContainer.incReference( );
 		this.owningContainer.getWorkspace( ).schedule( ( ) -> {
+			this.owningContainer.incReference( );
 			try {
 				InputStream is = this.owningContainer.getInputStream( this.metadata.getFullName( ) );
 				promise.complete( new ContainerInputStream( this.owningContainer, is ) );
 			}
 			catch( IOException ioe ) {
 				promise.completeExceptionally( ioe );
+			}
+			finally {
+				this.owningContainer.decReference( );
 			}
 		} );
 		
