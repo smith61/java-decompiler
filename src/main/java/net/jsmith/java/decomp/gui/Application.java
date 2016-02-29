@@ -20,7 +20,7 @@ public class Application extends javafx.application.Application {
         VBox root = new VBox( );
         
         Workspace defaultWorkspace = new WorkspaceImpl( "default" );
-        ContainerGroupView containerGroup = new ContainerGroupView( defaultWorkspace );
+        WorkspaceView containerGroup = new WorkspaceView( defaultWorkspace );
         containerGroup.setFitToHeight( true );
         containerGroup.setFitToWidth( true );
         

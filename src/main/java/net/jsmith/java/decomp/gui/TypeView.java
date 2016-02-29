@@ -15,6 +15,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.workspace.Type;
+import net.jsmith.java.decomp.workspace.Workspace;
 
 public class TypeView extends BorderPane {
 
@@ -93,10 +94,28 @@ public class TypeView extends BorderPane {
     }
     
     private void handleTypeReference( String typeName ) {
-//    	if( LOG.isInfoEnabled( ) ) {
-//    		LOG.info( "Handling type reference for type '{}'.", typeName );
-//    	}
-    	
+    	if( LOG.isInfoEnabled( ) ) {
+    		LOG.info( "Handling type reference for type '{}'.", typeName );
+    	}
+    	WorkspaceView workspaceView = this.containerView.getWorkspaceView( );
+    	Workspace workspace = workspaceView.getWorkspace( );
+    	workspace.resolveType( typeName ).whenCompleteAsync( ( types, err ) -> {
+    		if( err != null ) {
+    			if( LOG.isErrorEnabled( ) ) {
+    				LOG.error( "Error resolving type '{}' in workspace '{}'.", typeName, workspace.getName( ) );
+    			}
+    			ErrorDialog.displayError( "Error resolving type", "Error resolving type: " + typeName, err );
+    		}
+    		else {
+    			if( LOG.isInfoEnabled( ) ) {
+    				LOG.info( "Resolved '{}' instances for type '{}'.", types.size( ), typeName );
+    			}
+    			if( types.size( ) >= 1 ) {
+    				// TODO: Handle multiple resolved types.
+    				workspaceView.openAndShowType( types.get( 0 ) );
+    			}
+    		}
+    	}, PlatformExecutor.INSTANCE );
     }
     
 }

@@ -14,9 +14,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 
 public class ApplicationMenuBar extends MenuBar {
 
-    private final ContainerGroupView containerGroup;
+    private final WorkspaceView containerGroup;
     
-    public ApplicationMenuBar( ContainerGroupView containerGroup ) {
+    public ApplicationMenuBar( WorkspaceView containerGroup ) {
         this.containerGroup = Objects.requireNonNull( containerGroup, "containerGroup" );
         
         this.getMenus( ).add( this.buildFileMenu( ) );

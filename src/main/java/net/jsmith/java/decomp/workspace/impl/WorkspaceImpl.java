@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.jsmith.java.decomp.workspace.Container;
+import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
 public class WorkspaceImpl extends Referenceable implements Workspace {
@@ -100,6 +102,26 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 				container.close( );
 			}
 		}
+	}
+	
+	@Override
+	public CompletableFuture< List< Type > > resolveType( String typeName ) {
+		return this.withReference( ( ) -> {
+			return CompletableFuture.supplyAsync( ( ) -> {
+				return this.withReference( ( ) -> {
+					List< Type > types = new ArrayList< >( );
+					synchronized( this.containers ) {
+						for( Container container : this.containers ) {
+							Type type = container.findType( typeName );
+							if( type != null ) {
+								types.add( type );
+							}
+						}
+					}
+					return types;
+				} );
+			}, this.threadPool );
+		} );
 	}
 
 	@Override
