@@ -174,13 +174,22 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 	public void writeDefinition( String text, Object definition, boolean isLocal ) {
 		this.render( ( canvas ) -> {
 			if( definition instanceof TypeDefinition ) {
-				canvas.span( class_( CSS.JAVA_DEF_TYPE ) ).content( text );
+				TypeDefinition def = ( TypeDefinition ) definition;
+				
+				String id = String.format( "type:%s", def.getFullName( ) );
+				canvas.span( class_( CSS.JAVA_DEF_TYPE ).id( id ) ).content( text );
 			}
 			else if( definition instanceof MethodDefinition ) {
-				canvas.span( class_( CSS.JAVA_DEF_METHOD ) ).content( text );
+				MethodDefinition def = ( MethodDefinition ) definition;
+				
+				String id = String.format( "method:%s:%s", def.getName( ), def.getSignature( ) );
+				canvas.span( class_( CSS.JAVA_DEF_METHOD ).id( id ) ).content( text );
 			}
 			else if( definition instanceof FieldDefinition ) {
-				canvas.span( class_( CSS.JAVA_DEF_FIELD ) ).content( text );
+				FieldDefinition def = ( FieldDefinition ) definition;
+				
+				String id = String.format( "field:%s:%s", def.getName( ), def.getSignature( ) );
+				canvas.span( class_( CSS.JAVA_DEF_FIELD ).id( id ) ).content( text );
 			}
 			else if( definition instanceof ParameterDefinition ) {
 				canvas.span( class_( CSS.JAVA_DEF_PARAMETER ) ).content( text );
