@@ -225,7 +225,7 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 				
 				HtmlAttributes attribs = class_( CSS.JAVA_REF_TYPE );
 				attribs.add( "ref_type", "type" );
-				attribs.add( "type", ref.getFullName( ) );
+				attribs.add( "type", ref.getInternalName( ).replace( '/', '.' ) );
 				
 				canvas.span( attribs ).content( text );
 			}
