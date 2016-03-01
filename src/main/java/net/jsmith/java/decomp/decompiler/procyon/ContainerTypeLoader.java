@@ -38,7 +38,7 @@ public class ContainerTypeLoader implements ITypeLoader {
 		
 		InputStream is = null;
 		try {
-			is = type.getInputStream( ).get( );
+			is = type.getInputStream( );
 			if( is == null ) {
 				return false;
 			}

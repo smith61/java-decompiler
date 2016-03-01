@@ -1,7 +1,7 @@
 package net.jsmith.java.decomp.workspace;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
 
 public interface Type {
 
@@ -9,6 +9,6 @@ public interface Type {
 
 	Metadata getMetadata( );
 	
-	CompletableFuture< InputStream > getInputStream( );
+	InputStream getInputStream( ) throws IOException;
 	
 }

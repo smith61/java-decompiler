@@ -3,9 +3,7 @@ package net.jsmith.java.decomp.workspace.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
-import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Metadata;
 import net.jsmith.java.decomp.workspace.Type;
@@ -31,19 +29,24 @@ public class TypeImpl implements Type {
 	}
 
 	@Override
-	public CompletableFuture< InputStream > getInputStream( ) {
-		return ThreadPools.supplyBackground( ( ) -> {
-			this.owningContainer.incReference( );
-			try {
-				return this.owningContainer.getInputStream( this.metadata.getFullName( ) );
+	public InputStream getInputStream( ) throws IOException {
+		try {
+			return this.owningContainer.withReference( ( ) -> {
+				try {
+					InputStream is = this.owningContainer.getInputStream( this.metadata.getFullName( ) );
+					return new ContainerInputStream( this.owningContainer, is );
+				}
+				catch( IOException ioe ) {
+					throw new RuntimeException( ioe );
+				}
+			} );
+		}
+		catch( RuntimeException re ) {
+			if( re.getCause( ) instanceof IOException ) {
+				throw ( IOException ) re.getCause( );
 			}
-			catch( IOException ioe ) {
-				throw new RuntimeException( ioe );
-			}
-			finally {
-				this.owningContainer.decReference( );
-			}
-		} );
+			throw re;
+		}
 	}
 
 }
