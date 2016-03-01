@@ -76,7 +76,7 @@ public class ContainerContentView extends ScrollPane {
     
     private SortableTreeItem getPackageTreeItem( Type typeReference ) {
         SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-        for( String pkgPart : typeReference.getMetadata( ).getPackageName( ).split( "\\." ) ) {
+        for( String pkgPart : typeReference.getMetadata( ).getPackageName( ).split( "/" ) ) {
             if( pkgPart.isEmpty( ) ) {
                 continue;
             }
@@ -100,7 +100,7 @@ public class ContainerContentView extends ScrollPane {
     private SortableTreeItem findTreeItem( String fullName ) {
     	SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
     	
-    	for( String namePart : fullName.split( "[\\.\\$]" ) ) {
+    	for( String namePart : fullName.split( "[/\\$]" ) ) {
     		if( namePart.isEmpty( ) ) {
     			continue;
     		}

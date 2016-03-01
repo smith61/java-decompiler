@@ -33,7 +33,7 @@ public class MetadataImpl implements Metadata {
 		
 		this.modifiers = modifiers;
 		
-		int i = fullName.lastIndexOf( '.' );
+		int i = fullName.lastIndexOf( '/' );
 		if( i < 0 ) {
 			this.packageName = "";
 			this.typeName = fullName;

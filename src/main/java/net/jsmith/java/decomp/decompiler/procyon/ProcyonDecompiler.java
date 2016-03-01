@@ -42,10 +42,8 @@ public class ProcyonDecompiler implements Decompiler {
 					this.typeLoaders.put( type.getContainer( ), loader );
 				}
 			}
-			String typeName = type.getMetadata( ).getFullName( ).replace( '.', '/' );
-			
 			MetadataSystem metadataSystem = loader.getMetadataSystem( );
-			TypeDefinition def = metadataSystem.lookupType( typeName ).resolve( );
+			TypeDefinition def = metadataSystem.lookupType( type.getMetadata( ).getFullName( ) ).resolve( );
 		
 			DecompilationOptions options = new DecompilationOptions( );
 			options.setFullDecompilation( true );

@@ -41,7 +41,7 @@ public class MetadataLoader {
 			if( LOG.isDebugEnabled( ) ) {
 				LOG.debug( "Parsing metadata for class '{}' with access flags '{}'.", name, access );
 			}
-			this.builder.setFullName( toDottedName( name ) );
+			this.builder.setFullName( name );
 			this.builder.setModifiers( access );
 		}
 
@@ -52,8 +52,8 @@ public class MetadataLoader {
 			if( LOG.isDebugEnabled( ) ) {
 				LOG.debug( "Found outer class information '{}.{}.{}'", owner, name, desc );
 			}
-			this.builder.setEnclosingType( toDottedName( owner ) );
-			this.builder.setEnclosingMethod( toDottedName( name ), desc );
+			this.builder.setEnclosingType( owner );
+			this.builder.setEnclosingMethod( name, desc );
 		}
 
 		@Override
@@ -63,18 +63,11 @@ public class MetadataLoader {
 			if( LOG.isDebugEnabled( ) ) {
 				LOG.debug( "Found inner class reference '{}'.", name );
 			}
-			this.builder.addEnclosedType( toDottedName( name ) );
+			this.builder.addEnclosedType( name );
 		}
 
 		public MetadataImpl getTypeMetadata( ) {
 			return this.builder.build( );
-		}
-		
-		private String toDottedName( String typeName ) {
-			if( typeName == null ) {
-				return null;
-			}
-			return typeName.replace( '/', '.' );
 		}
 		
 	}

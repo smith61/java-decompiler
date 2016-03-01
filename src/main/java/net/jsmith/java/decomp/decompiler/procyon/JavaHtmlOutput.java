@@ -176,7 +176,7 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 			if( definition instanceof TypeDefinition ) {
 				TypeDefinition def = ( TypeDefinition ) definition;
 				
-				String id = String.format( "type:%s", def.getFullName( ) );
+				String id = String.format( "type:%s", def.getInternalName( ) );
 				canvas.span( class_( CSS.JAVA_DEF_TYPE ).id( id ) ).content( text );
 			}
 			else if( definition instanceof MethodDefinition ) {
@@ -225,7 +225,7 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 				
 				HtmlAttributes attribs = class_( CSS.JAVA_REF_TYPE );
 				attribs.add( "ref_type", "type" );
-				attribs.add( "type", ref.getInternalName( ).replace( '/', '.' ) );
+				attribs.add( "type", ref.getInternalName( ) );
 				
 				canvas.span( attribs ).content( text );
 			}
@@ -234,9 +234,9 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 				
 				HtmlAttributes attribs = class_( CSS.JAVA_REF_METHOD );
 				attribs.add( "ref_type", "method" );
-				attribs.add( "type", ref.getDeclaringType( ).getFullName( ) );
+				attribs.add( "type", ref.getDeclaringType( ).getInternalName( ) );
 				attribs.add( "method_name", ref.getName( ) );
-				attribs.add( "method_type", ref.getReturnType( ).getFullName( ) );
+				attribs.add( "method_type", ref.getReturnType( ).getInternalName( ) );
 				attribs.add( "method_sig", ref.getSignature( ) );
 				
 				canvas.span( attribs ).content( text );
@@ -246,9 +246,9 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 				
 				HtmlAttributes attribs = class_( CSS.JAVA_REF_FIELD );
 				attribs.add( "ref_type", "field" );
-				attribs.add( "type", ref.getDeclaringType( ).getFullName( ) );
+				attribs.add( "type", ref.getDeclaringType( ).getInternalName( ) );
 				attribs.add( "field_name", ref.getName( ) );
-				attribs.add( "field_type", ref.getFieldType( ).getFullName( ) );
+				attribs.add( "field_type", ref.getFieldType( ).getInternalName( ) );
 				
 				canvas.span( attribs ).content( text );
 			}

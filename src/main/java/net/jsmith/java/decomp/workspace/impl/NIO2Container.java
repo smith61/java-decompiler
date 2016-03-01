@@ -35,7 +35,7 @@ public class NIO2Container extends AbstractContainer {
 
 	@Override
 	protected InputStream getInputStream( String typeName ) throws IOException {
-		Path path = this.rootPath.resolve( typeName.replace( '.', '/' ) + ".class" );
+		Path path = this.rootPath.resolve( typeName + ".class" );
 		if( !Files.isRegularFile( path ) ) {
 			return null;
 		}
@@ -59,7 +59,7 @@ public class NIO2Container extends AbstractContainer {
 			} ).map( ( path ) -> {
 				String typeName = this.rootPath.relativize( path ).toString( );
 				typeName = typeName.substring( 0, typeName.lastIndexOf( '.' ) );
-				typeName = typeName.replace( '/', '.' ).replace( '\\', '.' );
+				typeName = typeName.replace( '\\', '/' );
 				return typeName;
 			} ).sorted( ).forEach( this::loadType );
 		}
