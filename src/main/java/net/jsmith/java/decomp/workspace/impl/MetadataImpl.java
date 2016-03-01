@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Metadata;
 
 public class MetadataImpl implements Metadata {
@@ -33,15 +34,8 @@ public class MetadataImpl implements Metadata {
 		
 		this.modifiers = modifiers;
 		
-		int i = fullName.lastIndexOf( '/' );
-		if( i < 0 ) {
-			this.packageName = "";
-			this.typeName = fullName;
-		}
-		else {
-			this.packageName = fullName.substring( 0, i );
-			this.typeName = fullName.substring( i + 1 );
-		}
+		this.packageName = TypeNameUtils.getPackageName( fullName );
+		this.typeName = TypeNameUtils.getTypeName( fullName );
 	}
 	
 	@Override

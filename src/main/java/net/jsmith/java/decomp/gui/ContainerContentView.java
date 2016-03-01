@@ -14,6 +14,7 @@ import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Metadata;
 import net.jsmith.java.decomp.workspace.Modifier;
 import net.jsmith.java.decomp.workspace.Type;
@@ -74,12 +75,9 @@ public class ContainerContentView extends ScrollPane {
         return this.containerView;
     }
     
-    private SortableTreeItem getPackageTreeItem( Type typeReference ) {
+    private SortableTreeItem getPackageTreeItem( Metadata metadata ) {
         SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-        for( String pkgPart : typeReference.getMetadata( ).getPackageName( ).split( "/" ) ) {
-            if( pkgPart.isEmpty( ) ) {
-                continue;
-            }
+        for( String pkgPart : TypeNameUtils.getPackageParts( metadata.getFullName( ) ) ) {
             SortableTreeItem nextNode = null;
             for( TreeItem< String > child : node.getChildren( ) ) {
                 if( child.getValue( ).equals( pkgPart ) ) {
@@ -97,13 +95,13 @@ public class ContainerContentView extends ScrollPane {
         return node;
     }
     
-    private SortableTreeItem findTreeItem( String fullName ) {
-    	SortableTreeItem node = ( SortableTreeItem ) this.contentTree.getRoot( );
-    	
-    	for( String namePart : fullName.split( "[/\\$]" ) ) {
-    		if( namePart.isEmpty( ) ) {
-    			continue;
-    		}
+    private SortableTreeItem findEnclosingTreeItem( Metadata metadata ) {
+    	String enclosingTypeName = TypeNameUtils.getEnclosingTypeName( metadata.getFullName( ) );
+    	if( enclosingTypeName == null ) {
+    		return null;
+    	}
+    	SortableTreeItem node = this.getPackageTreeItem( metadata );
+    	for( String namePart : TypeNameUtils.getTypeParts( enclosingTypeName ) ) {
     		SortableTreeItem nextNode = null;
     		for( TreeItem< String > child : node.getChildren( ) ) {
     			if( child.getValue( ).equals( namePart ) ) {
@@ -116,37 +114,36 @@ public class ContainerContentView extends ScrollPane {
     		}
     		node = nextNode;
     	}
+    	
     	return node;
     }
     
     private void addType( Type type ) {
+    	Metadata metadata = type.getMetadata( );
     	if( LOG.isTraceEnabled( ) ) {
-    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
+    		LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", metadata.getFullName( ), type.getContainer( ).getName( ) );
     	}
     	if( type.getMetadata( ).getEnclosingType( ) != null ) {
     		if( LOG.isTraceEnabled( ) ) {
-    			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
+    			LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", metadata.getFullName( ), type.getContainer( ).getName( ) );
     		}
     		return;
     	}
-    	String typeName = type.getMetadata( ).getTypeName( );
-    	
-    	if( typeName.contains( "$" ) ) {
-    		// Attempt to resolve a parent type that may already
-    		//  be loaded. Some java programmers decide to use '$'
-    		//  into class names so we may not find them.
-    		String fullName = type.getMetadata( ).getFullName( );
-    		fullName = fullName.substring( 0, fullName.lastIndexOf( '$' ) );
+    	String typeName = metadata.getTypeName( );
+
+		// Attempt to resolve a parent type that may already
+		//  be loaded. Some java programmers decide to use '$'
+		//  into class names so we may not find them.
+    	SortableTreeItem enclosingItem = this.findEnclosingTreeItem( metadata );
+    	if( enclosingItem != null && enclosingItem instanceof TypeTreeItem ) {
+    		TypeTreeItem tti = ( TypeTreeItem ) enclosingItem;
     		
-    		SortableTreeItem enclosingItem = this.findTreeItem( fullName );
-    		if( enclosingItem != null ) {
-    			typeName = typeName.substring( typeName.lastIndexOf( '$' ) + 1 );
-    			
-    			enclosingItem.addChildSorted( new TypeTreeItem( type, typeName ) );
-    			return;
-    		}
+    		typeName = typeName.substring( tti.type.getMetadata( ).getTypeName( ).length( ) + 1 );
+    		enclosingItem.addChildSorted( new TypeTreeItem( type, typeName ) );
     	}
-    	getPackageTreeItem( type ).addChildSorted( new TypeTreeItem( type, typeName ) );
+    	else {
+    		getPackageTreeItem( metadata ).addChildSorted( new TypeTreeItem( type, typeName ) );
+    	}
     }
     
     private abstract class SortableTreeItem extends TreeItem< String > implements Comparable< TreeItem< String > > {
