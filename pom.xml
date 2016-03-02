@@ -14,6 +14,14 @@
 		<logback.version>1.1.5</logback.version>
 		<rendersnake.version>1.9.0</rendersnake.version>
 	</properties>
+	
+	<repositories>
+		<repository>
+			<id>sonatype</id>
+			<name>sonatype</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -55,6 +63,11 @@
 					<groupId>javax.servlet</groupId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.fxmisc.richtext</groupId>
+			<artifactId>richtextfx</artifactId>
+			<version>0.6.10</version>
 		</dependency>
 	</dependencies>
 

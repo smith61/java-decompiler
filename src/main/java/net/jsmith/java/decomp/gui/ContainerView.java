@@ -54,11 +54,11 @@ public class ContainerView extends BorderPane {
     	}
         
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            return Objects.equals( type, ( ( TypeView ) t.getContent( ) ).getType( ) );
+            return Objects.equals( type, ( ( RichTextTypeView ) t.getContent( ) ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
             Tab t = new Tab( );
             t.setText( type.getMetadata( ).getTypeName( ) );
-            t.setContent( new TypeView( ContainerView.this, type ) );
+            t.setContent( new RichTextTypeView( ContainerView.this, type ) );
             
             typeReferenceTabs.getTabs( ).add( t );
             return t;

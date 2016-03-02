@@ -1,0 +1,37 @@
+
+.java_comment {
+	-fx-fill: #008000
+}
+
+.java_keyword {
+	-fx-fill: #660066;
+}
+.java_literal {
+	-fx-fill: blue;
+}
+
+.java_ref_type {
+	-fx-cursor: pointer;
+	-fx-underline: true;
+}
+.java_ref_field {
+	-fx-cursor: pointer;
+	-fx-underline: true;
+}
+.java_ref_method {
+	-fx-cursor: pointer;
+	-fx-underline: true;
+}
+.java_ref_variable {
+	-fx-fill: #bf7d40;
+}
+.java_ref_parameter {
+	-fx-fill: #bf7d40;
+}
+
+.java_def_variable {
+	-fx-fill: #bf7d40;
+}
+.java_def_parameter {
+	-fx-fill: #bf7d40;
+}
