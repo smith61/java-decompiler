@@ -5,12 +5,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.jsmith.java.decomp.listener.BroadcastListener;
 import net.jsmith.java.decomp.utils.IOUtils;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
@@ -22,14 +21,15 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 	private final String name;
 	private final WorkspaceImpl workspace;
 	
-	private final AtomicReference< Consumer< ? super Type > > typeLoadedListener;
 	private final List< Type > loadedTypes = new ArrayList< >( );
+	
+	private final BroadcastListener< Type > onTypeLoaded;
 	
 	protected AbstractContainer( String name, WorkspaceImpl workspace ) {
 		this.name = Objects.requireNonNull( name, "name" );
 		this.workspace = Objects.requireNonNull( workspace, "workspace" );
 		
-		this.typeLoadedListener = new AtomicReference< >( null );
+		this.onTypeLoaded = new BroadcastListener< >( );
 		
 		this.workspace.incReference( );
 	}
@@ -68,23 +68,10 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 	}
 	
 	@Override
-	public final void setOnTypeLoadedListener( Consumer< ? super Type > l ) {
-		this.withReference( ( ) -> {
-			synchronized( this.loadedTypes ) {
-				// Ensure proper ordering of calls to the new listener
-				//  All previously loaded types should be provided
-				//  before sending any new types.
-				this.typeLoadedListener.set( l );
-				if( l != null ) {
-					for( Type loadedType : this.loadedTypes ) {
-						l.accept( loadedType );
-					}
-				}
-			}
-			return null;
-		} );
+	public BroadcastListener< Type > onTypeLoaded( ) {
+		return this.onTypeLoaded;
 	}
-	
+
 	protected final void loadType( String typeName ) {
 		if( LOG.isDebugEnabled( ) ) {
 			LOG.debug( "Loading type with name '{}' into container '{}'.", typeName, this.getName( ) );
@@ -109,11 +96,8 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 		
 		synchronized( this.loadedTypes ) {
 			this.loadedTypes.add( result );
-			Consumer< ? super Type > l = this.typeLoadedListener.get( );
-			if( l != null ) {
-				l.accept( result );
-			}
 		}
+		this.onTypeLoaded.on( result );
 	}
 	
 	protected void implClose( ) {

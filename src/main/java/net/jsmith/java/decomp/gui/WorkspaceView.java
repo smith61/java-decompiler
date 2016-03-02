@@ -14,6 +14,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
@@ -62,10 +63,10 @@ public class WorkspaceView extends ScrollPane {
         	}
         } );
         
-        workspace.setErrorListener( ListenerUtils.onFXThread( ( err ) -> {
+        workspace.onError( ).register( ListenerUtils.onFXThread( ( err ) -> {
         	ErrorDialog.displayError( "Error in workspace", "Error in workspace threads.", err );
         } ) );
-        workspace.setContainerClosedListener( ListenerUtils.onFXThread( ( container ) -> {
+        workspace.onContainerClosed( ).register( ListenerUtils.onFXThread( ( container ) -> {
         	if( LOG.isInfoEnabled( ) ) {
         		LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
         	}
@@ -75,17 +76,8 @@ public class WorkspaceView extends ScrollPane {
         		this.containersTab.getTabs( ).remove( tab );
         	} );
         } ) );
-        workspace.setContainerOpenedListener( ListenerUtils.onFXThread( ( container ) -> {
-        	if( LOG.isInfoEnabled( ) ) {
-        		LOG.info( "Received container opened event for container '{}'.", container.getName( ) );
-        	}
-        	Tab tab = new Tab( );
-        	tab.setText( container.getName( ) );
-        	tab.setContent( new ContainerView( this, container ) );
-        	
-        	this.containersTab.getTabs( ).add( tab );
-        	this.containersTab.getSelectionModel( ).select( tab );
-        } ) );
+        workspace.onContainerOpened( ).register( ListenerUtils.onFXThread( this::addContainer ) );
+        workspace.getContainers( ).forEach( this::addContainer );
     }
     
     public Workspace getWorkspace( ) {
@@ -115,6 +107,25 @@ public class WorkspaceView extends ScrollPane {
     		LOG.info( "Opening and showing file '{}'.", file );
     	}
     	this.getWorkspace( ).openContainerAtPath( Paths.get( file.toURI( ) ) );
+    }
+    
+    private void addContainer( Container container ) {
+    	if( LOG.isInfoEnabled( ) ) {
+    		LOG.info( "Received container opened event for container '{}'.", container.getName( ) );
+    	}
+    	
+    	Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
+    		ContainerView view = ( ContainerView ) t.getContent( );
+    		return view.getContainer( ) == container;
+    	} ).findFirst( ).orElseGet( ( ) -> {
+    		Tab t = new Tab( );
+        	t.setText( container.getName( ) );
+        	t.setContent( new ContainerView( this, container ) );
+        	
+        	this.containersTab.getTabs( ).add( t );
+        	return t;
+    	} );
+    	this.containersTab.getSelectionModel( ).select( tab );
     }
     
 }

@@ -10,12 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.jsmith.java.decomp.listener.BroadcastListener;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
@@ -27,18 +26,18 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	private final String name;
 	private final List< AbstractContainer > containers;
 	
-	private final AtomicReference< Consumer< ? super Container > > containerOpenedListener;
-	private final AtomicReference< Consumer< ? super Container > > containerClosedListener;
-	private final AtomicReference< Consumer< ? super Throwable > > errorListener;
+	private final BroadcastListener< Container > onContainerOpened;
+	private final BroadcastListener< Container > onContainerClosed;
+	private final BroadcastListener< Throwable > onError;
 	
 	public WorkspaceImpl( String name ) {
 		this.name = Objects.requireNonNull( name, "name" );
 		
 		this.containers = new ArrayList< >( );
 		
-		this.containerOpenedListener = new AtomicReference< >( );
-		this.containerClosedListener = new AtomicReference< >( );
-		this.errorListener = new AtomicReference< >( );
+		this.onContainerOpened = new BroadcastListener< >( );
+		this.onContainerClosed = new BroadcastListener< >( );
+		this.onError = new BroadcastListener< >( );
 	}
 	
 	@Override
@@ -70,10 +69,7 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 				synchronized( this.containers ) {
 					this.containers.add( container );
 				}
-				Consumer< ? super Container > l = this.containerOpenedListener.get( );
-				if( l != null ) {
-					l.accept( container );
-				}
+				this.onContainerOpened.on( container );
 			}
 			catch( Throwable err ) {
 				if( LOG.isErrorEnabled( ) ) {
@@ -111,53 +107,31 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 			return types;
 		} );
 	}
-
-	@Override
-	public void setContainerOpenedListener( Consumer< ? super Container > l ) {
-		this.withReference( ( ) -> {
-			this.containerOpenedListener.set( l );
-			if( l != null ) {
-				synchronized( this.containers ) {
-					for( Container container : this.containers ) {
-						l.accept( container );
-					}
-				}
-			}
-			return null;
-		} );
-	}
-
-	@Override
-	public void setContainerClosedListener( Consumer< ? super Container > l ) {
-		this.withReference( ( ) -> {
-			this.containerClosedListener.set( l );
-			return null;
-		} );
-	}
-
-	@Override
-	public void setErrorListener( Consumer< ? super Throwable > l ) {
-		this.withReference( ( ) -> {
-			this.errorListener.set( l );
-			return null;
-		} );
-	}
 	
+	@Override
+	public BroadcastListener< Container > onContainerOpened( ) {
+		return this.onContainerOpened;
+	}
+
+	@Override
+	public BroadcastListener< Container > onContainerClosed( ) {
+		return this.onContainerClosed;
+	}
+
+	@Override
+	public BroadcastListener< Throwable > onError( ) {
+		return this.onError;
+	}
+
 	protected final void onError( Throwable t ) {
-		Consumer< ? super Throwable > listener = this.errorListener.get( );
-		if( listener != null ) {
-			listener.accept( t );
-		}
+		this.onError.on( t );
 	}
 	
 	protected final void removeContainer( AbstractContainer container ) {
 		synchronized( this.containers ) {
 			this.containers.remove( container );
 		}
-		Consumer< ? super Container > listener = this.containerClosedListener.get( );
-		if( listener != null ) {
-			listener.accept( container );
-		}
+		this.onContainerClosed.on( container );
 	}
 
 	protected void implClose( ) {

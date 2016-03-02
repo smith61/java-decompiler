@@ -2,13 +2,13 @@ package net.jsmith.java.decomp.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
+import net.jsmith.java.decomp.listener.Listener;
 import net.jsmith.java.decomp.utils.ThreadPools;
 
 public class ListenerUtils {
 
-	public static < T > Consumer< T > onFXThread( Consumer< T > l ) {
+	public static < T > Listener< T > onFXThread( Listener< T > l ) {
 		List< T > pendingEvents = new ArrayList< >( );
 		return ( evt ) -> {
 			boolean scheduleUpdate = false;
@@ -24,7 +24,7 @@ public class ListenerUtils {
 						pendingEvents.clear( );
 					}
 					for( T event : events ) {
-						l.accept( event );
+						l.on( event );
 					}
 				} );
 			}

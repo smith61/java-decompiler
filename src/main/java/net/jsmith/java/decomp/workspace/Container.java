@@ -1,7 +1,8 @@
 package net.jsmith.java.decomp.workspace;
 
 import java.util.List;
-import java.util.function.Consumer;
+
+import net.jsmith.java.decomp.listener.BroadcastListener;
 
 public interface Container {
 
@@ -15,6 +16,6 @@ public interface Container {
 	
 	void close( );
 	
-	void setOnTypeLoadedListener( Consumer< ? super Type > l );
+	BroadcastListener< Type > onTypeLoaded( );
 	
 }

@@ -15,6 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
+import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Metadata;
 import net.jsmith.java.decomp.workspace.Modifier;
 import net.jsmith.java.decomp.workspace.Type;
@@ -68,7 +69,9 @@ public class ContainerContentView extends ScrollPane {
             }
         } );
         
-        containerView.getContainer( ).setOnTypeLoadedListener( ListenerUtils.onFXThread( this::addType ) );
+        Container container = containerView.getContainer( );
+        container.onTypeLoaded( ).register( ListenerUtils.onFXThread( this::addType ) );
+        container.getContainedTypes( ).forEach( this::addType );
     }
     
     public ContainerView getContainerView( ) {
@@ -161,6 +164,11 @@ public class ContainerContentView extends ScrollPane {
     			if( cmp < 0 ) {
     				itr.previous( );
     				break;
+    			}
+    			else if( cmp == 0 ) {
+    				// Type has already been added to this child.
+    				//  Duplicate type has been received.
+    				return;
     			}
     		}
     		itr.add( item );
