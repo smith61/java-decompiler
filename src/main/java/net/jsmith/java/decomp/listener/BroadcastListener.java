@@ -1,14 +1,14 @@
 package net.jsmith.java.decomp.listener;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class BroadcastListener< E > implements Listener< E > {
 
-	private final List< Listener< E > > listeners;
+	private final Set< Listener< E > > listeners;
 	
 	public BroadcastListener( ) {
-		this.listeners = new LinkedList< >( );
+		this.listeners = new LinkedHashSet< >( );
 	}
 
 	public void register( Listener< E > listener ) {
