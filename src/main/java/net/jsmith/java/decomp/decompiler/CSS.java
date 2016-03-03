@@ -3,6 +3,8 @@ package net.jsmith.java.decomp.decompiler;
 public class CSS {
 	
 	public static final String JAVA                = "java";
+	
+	public static final String JAVA_LINE           = JAVA + " java_line";
 
 	public static final String JAVA_INDENT         = JAVA + " java_indent";
 	

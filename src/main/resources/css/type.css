@@ -5,9 +5,25 @@ body {
 	color: #1a1a1a
 }
 
-.java_indent {
-	margin-left: 40px;
+pre {
+	counter-reset: line_num;
 }
+pre span.java_line {
+	counter-increment: line_num;
+}
+pre span.java_line:before {
+	content: counter(line_num);
+	width: 2em;
+	padding: 0 .5em;
+ 	margin-right: .5em;
+	display: inline-block;
+	border-right: 1px solid black;
+	text-align: right;
+	-webkit-user-select: none;
+}
+
+
+
 .java_comment {
 	color: #008000
 }
