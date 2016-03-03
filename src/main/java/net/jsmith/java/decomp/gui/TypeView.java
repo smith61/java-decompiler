@@ -15,8 +15,11 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.utils.ThreadPools;
+import net.jsmith.java.decomp.workspace.FieldReference;
+import net.jsmith.java.decomp.workspace.MethodReference;
 import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
+import net.jsmith.java.decomp.workspace.TypeReference;
 import net.jsmith.java.decomp.workspace.Workspace;
 import netscape.javascript.JSObject;
 
@@ -127,17 +130,9 @@ public class TypeView extends BorderPane {
     		Node refTypeNode = attribs.getNamedItem( "ref_type" );
     		if( refTypeNode == null ) continue;
     		
+    		Reference reference = this.createReferenceFromNode( attribs );
     		( ( EventTarget ) span ).addEventListener( "click", ( evt ) -> {
-    			String refType = refTypeNode.getTextContent( );
-    			if( refType.equals( "type" ) ) {
-    				String typeName = attribs.getNamedItem( "type" ).getTextContent( );
-    				this.handleTypeReference( typeName );
-    			}
-    			else {
-    				if( LOG.isWarnEnabled( ) ) {
-    					LOG.warn( "Unhandled reference type '{}'.", refType );
-    				}
-    			}
+    			this.handleReferenceClick( reference );
     		}, true );
     	}
     	this.isDecompiled = true;
@@ -147,26 +142,52 @@ public class TypeView extends BorderPane {
     	}
     }
     
-    private void handleTypeReference( String typeName ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Handling type reference for type '{}'.", typeName );
+    private Reference createReferenceFromNode( NamedNodeMap attribs ) {
+    	String refType = attribs.getNamedItem( "ref_type" ).getTextContent( );
+    	if( refType.equals( "type" ) ) {
+    		String typeName = attribs.getNamedItem( "type" ).getTextContent( );
+    		return new TypeReference( typeName );
     	}
+    	else if( refType.equals( "method" ) ) {
+    		String typeName = attribs.getNamedItem( "type" ).getTextContent( );
+    		String methodName = attribs.getNamedItem( "method_name" ).getTextContent( );
+    		String methodSig  = attribs.getNamedItem( "method_sig" ).getTextContent( );
+    		
+    		return new MethodReference( typeName, methodName, methodSig );
+    	}
+    	else if( refType.equals( "field" ) ) {
+    		String typeName = attribs.getNamedItem( "type" ).getTextContent( );
+    		String fieldName = attribs.getNamedItem( "field_name" ).getTextContent( );
+    		String fieldType = attribs.getNamedItem( "field_type" ).getTextContent( );
+    		
+    		return new FieldReference( typeName, fieldName, fieldType );
+    	}
+    	else {
+    		throw new IllegalArgumentException( "Unknown reference type encountered: " + refType );
+    	}
+    }
+    
+    private void handleReferenceClick( Reference reference ) {
+    	if( LOG.isInfoEnabled( ) ) {
+    		LOG.info( "Handling reference click for id '{}'.", reference.toAnchorID( ) );
+    	}
+    	
     	WorkspaceView workspaceView = this.containerView.getWorkspaceView( );
     	Workspace workspace = workspaceView.getWorkspace( );
-    	workspace.resolveType( typeName ).whenCompleteAsync( ( types, err ) -> {
+    	workspace.resolveReference( reference ).whenCompleteAsync( ( types, err ) -> {
     		if( err != null ) {
     			if( LOG.isErrorEnabled( ) ) {
-    				LOG.error( "Error resolving type '{}' in workspace '{}'.", typeName, workspace.getName( ) );
+    				LOG.error( "Error resolving reference '{}'.", reference.toAnchorID( ), err );
     			}
-    			ErrorDialog.displayError( "Error resolving type", "Error resolving type: " + typeName, err );
+    			ErrorDialog.displayError( "Error resolving reference.", "Error resolving reference: " + reference.toAnchorID( ), err );
     		}
     		else {
     			if( LOG.isInfoEnabled( ) ) {
-    				LOG.info( "Resolved '{}' instances for type '{}'.", types.size( ), typeName );
+    				LOG.info( "Resolved '{}' instances for reference '{}'.", types.size( ), reference.toAnchorID( ) );
     			}
     			if( types.size( ) >= 1 ) {
-    				// TODO: Handle multiple resolved types.
-    				workspaceView.openAndShowType( types.get( 0 ) );
+    				// TODO: Handle multiple resolutions.
+    				workspaceView.openAndShowType( types.get( 0 ), reference );
     			}
     		}
     	}, ThreadPools.PLATFORM );

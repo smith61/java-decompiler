@@ -16,7 +16,7 @@ public interface Workspace {
 	
 	void close( );
 	
-	CompletableFuture< List< Type > > resolveType( String typeName );
+	CompletableFuture< List< Type > > resolveReference( Reference reference );
 	
 	BroadcastListener< Container > onContainerOpened( );
 	BroadcastListener< Container > onContainerClosed( );

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import net.jsmith.java.decomp.listener.BroadcastListener;
 import net.jsmith.java.decomp.workspace.Container;
+import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
@@ -93,18 +94,9 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	}
 	
 	@Override
-	public CompletableFuture< List< Type > > resolveType( String typeName ) {
+	public CompletableFuture< List< Type > > resolveReference( Reference reference ) {
 		return this.withReferenceAsync( ( ) -> {
-			List< Type > types = new ArrayList< >( );
-			synchronized( this.containers ) {
-				for( Container container : this.containers ) {
-					Type type = container.findType( typeName );
-					if( type != null ) {
-						types.add( type );
-					}
-				}
-			}
-			return types;
+			return new ReferenceResolver( this, reference ).resolve( );
 		} );
 	}
 	
