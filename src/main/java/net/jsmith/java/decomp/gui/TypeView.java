@@ -1,6 +1,5 @@
 package net.jsmith.java.decomp.gui;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -15,7 +14,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
-import net.jsmith.java.decomp.utils.IOUtils;
 import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
@@ -30,8 +28,6 @@ public class TypeView extends BorderPane {
     private final Type type;
     
     private final WebView contentView;
-
-    private JSObject jsUtils;
     
     private boolean isDecompiled;
     private Runnable onDecompiled;
@@ -49,8 +45,6 @@ public class TypeView extends BorderPane {
         this.contentView.setOnDragDone( null );
         
         this.setCenter( this.contentView );
-        
-        this.jsUtils = null;
         
         this.isDecompiled = false;
         this.onDecompiled = null;
@@ -115,21 +109,16 @@ public class TypeView extends BorderPane {
     }
     
     private boolean seekToAnchor( String anchorID ) {
-    	return ( Boolean ) this.jsUtils.call( "seekToAnchor", anchorID );
+    	Node element = this.contentView.getEngine( ).getDocument( ).getElementById( anchorID );
+    	if( element == null ) {
+    		return false;
+    	}
+    	( ( JSObject ) element ).call( "scrollIntoView", true );
+    	
+    	return true;
     }
     
     private void registerEventHandlers( Document document ) {
-    	try {
-    		String jsUtils = IOUtils.readResourceAsString( "/js/type-view.js" );
-    		
-    		this.jsUtils = ( JSObject ) this.contentView.getEngine( ).executeScript( jsUtils );
-    	}
-    	catch( IOException ioe ) {
-    		if( LOG.isErrorEnabled( ) ) {
-    			LOG.error( "Error loading javascript utility functions into DOM.", ioe );
-    		}
-    	}
-    	
     	NodeList spans = document.getElementsByTagName( "span" );
     	for( int i = 0; i < spans.getLength( ); i++ ) {
     		Node span = spans.item( i );
