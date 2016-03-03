@@ -15,6 +15,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.utils.ThreadPools;
+import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 import netscape.javascript.JSObject;
@@ -85,10 +86,9 @@ public class TypeView extends BorderPane {
         return this.type;
     }
     
-    public void seekToType( Type type ) {
+    public void seekToReference( Reference reference ) {
     	this.setOnDecompiled( ( ) -> {
-    		String anchorID = String.format( "type:%s", type.getMetadata( ).getFullName( ) );
-    		this.seekToAnchor(anchorID );
+    		this.seekToAnchor( reference.toAnchorID( ) );
     	} );
     }
     

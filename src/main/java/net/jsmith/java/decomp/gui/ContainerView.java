@@ -11,6 +11,7 @@ import javafx.scene.layout.BorderPane;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
+import net.jsmith.java.decomp.workspace.TypeReference;
 
 public class ContainerView extends BorderPane {
 	
@@ -68,7 +69,7 @@ public class ContainerView extends BorderPane {
         
         this.typeReferenceTabs.getSelectionModel( ).select( tab );
         if( outerType != type ) {
-        	( ( TypeView ) tab.getContent( ) ).seekToType( type );
+        	( ( TypeView ) tab.getContent( ) ).seekToReference( new TypeReference( type.getMetadata( ).getFullName( ) ) );
         }
     }
     
