@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Type;
 
@@ -52,19 +53,37 @@ public class ContainerView extends BorderPane {
     	if( LOG.isInfoEnabled( ) ) {
     		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     	}
-        
+    	
+    	Type outerType = this.findOutermostType( type );
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            return Objects.equals( type, ( ( RichTextTypeView ) t.getContent( ) ).getType( ) );
+            return Objects.equals( outerType, ( ( TypeView ) t.getContent( ) ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
             Tab t = new Tab( );
-            t.setText( type.getMetadata( ).getTypeName( ) );
-            t.setContent( new RichTextTypeView( ContainerView.this, type ) );
+            t.setText( outerType.getMetadata( ).getTypeName( ) );
+            t.setContent( new TypeView( ContainerView.this, outerType ) );
             
             typeReferenceTabs.getTabs( ).add( t );
             return t;
         } );
         
         this.typeReferenceTabs.getSelectionModel( ).select( tab );
+        if( outerType != type ) {
+        	( ( TypeView ) tab.getContent( ) ).seekToType( type );
+        }
+    }
+    
+    private Type findOutermostType( Type actType ) {
+    	Type type = actType;
+    	while( true ) {
+    		String outerTypeName = TypeNameUtils.getEnclosingTypeName( type.getMetadata( ).getFullName( ) );
+    		if( outerTypeName == null ) break;
+    		
+    		Type outerType = this.container.findType( outerTypeName );
+    		if( outerType == null ) break;
+    		
+    		type = outerType;
+    	}
+    	return type;
     }
     
 }

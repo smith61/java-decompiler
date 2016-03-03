@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 public class IOUtils {
 
@@ -13,6 +14,24 @@ public class IOUtils {
 				c.close( );
 			}
 			catch( Exception e ) { }
+		}
+	}
+	
+	public static String readResourceAsString( String resourceName ) throws IOException{
+		return new String( IOUtils.readResource( resourceName ), Charset.forName( "UTF-8" ) );
+	}
+	
+	public static byte[ ] readResource( String resourceName ) throws IOException {
+		InputStream is = null;
+		try {
+			is = IOUtils.class.getResourceAsStream( resourceName );
+			if( is == null ) {
+				throw new IOException( "Resource not found: " + resourceName );
+			}
+			return readFully( is );
+		}
+		finally {
+			IOUtils.safeClose( is );
 		}
 	}
 	
