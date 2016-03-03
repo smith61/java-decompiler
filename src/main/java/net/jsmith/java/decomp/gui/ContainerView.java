@@ -10,6 +10,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Container;
+import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.TypeReference;
 
@@ -45,6 +46,10 @@ public class ContainerView extends BorderPane {
     }
     
     public void openAndShowType( Type type ) {
+    	this.openAndShowType( type, new TypeReference( type.getMetadata( ).getFullName( ) ) );
+    }
+    
+    public void openAndShowType( Type type, Reference reference ) {
         if( type.getContainer( ) != this.container ) {
         	if( LOG.isErrorEnabled( ) ) {
         		LOG.error( "Attempted to open type '{}' in container '{}' into container view for '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), this.container.getName( ) );
@@ -68,9 +73,7 @@ public class ContainerView extends BorderPane {
         } );
         
         this.typeReferenceTabs.getSelectionModel( ).select( tab );
-        if( outerType != type ) {
-        	( ( TypeView ) tab.getContent( ) ).seekToReference( new TypeReference( type.getMetadata( ).getFullName( ) ) );
-        }
+    	( ( TypeView ) tab.getContent( ) ).seekToReference( reference );
     }
     
     private Type findOutermostType( Type actType ) {

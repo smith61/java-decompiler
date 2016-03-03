@@ -15,6 +15,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import net.jsmith.java.decomp.workspace.Container;
+import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.Workspace;
 
@@ -100,6 +101,24 @@ public class WorkspaceView extends ScrollPane {
         
         this.containersTab.getSelectionModel( ).select( tab );
         ( ( ContainerView ) tab.getContent( ) ).openAndShowType( type );
+    }
+    
+    public void openAndShowType( Type type, Reference reference ) {
+    	if( LOG.isInfoEnabled( ) ) {
+    		LOG.info( "Opening and showing type '{}' in container '{}' and seeking to reference '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), reference.toAnchorID( ) );
+    	}
+    	Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
+    		ContainerView view = ( ContainerView ) t.getContent( );
+    		return view.getContainer( ) == type.getContainer( );
+    	} ).findFirst( ).orElseThrow( ( ) -> {
+    		if( LOG.isWarnEnabled( ) ) {
+        		LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
+        	}
+            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getContainer( ).getName( ) );
+    	} );
+    	
+    	this.containersTab.getSelectionModel( ).select( tab );
+    	( ( ContainerView ) tab.getContent( ) ).openAndShowType( type, reference );
     }
     
     public void openAndShowFile( File file ) {
