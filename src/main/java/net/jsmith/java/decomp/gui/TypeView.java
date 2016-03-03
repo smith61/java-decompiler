@@ -124,9 +124,6 @@ public class TypeView extends BorderPane {
     		Node span = spans.item( i );
     		
     		NamedNodeMap attribs = span.getAttributes( );
-    		if( attribs.getNamedItem( "id" ) != null ) {
-    			LOG.info( attribs.getNamedItem( "id" ).getTextContent( ) );
-    		}
     		Node refTypeNode = attribs.getNamedItem( "ref_type" );
     		if( refTypeNode == null ) continue;
     		
