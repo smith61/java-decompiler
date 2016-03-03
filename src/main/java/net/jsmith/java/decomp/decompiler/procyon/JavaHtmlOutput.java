@@ -182,13 +182,13 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 			else if( definition instanceof MethodDefinition ) {
 				MethodDefinition def = ( MethodDefinition ) definition;
 				
-				String id = String.format( "method:%s:%s", def.getName( ), def.getSignature( ) );
+				String id = String.format( "method:%s:%s:%s", def.getDeclaringType( ).getInternalName( ), def.getName( ), def.getSignature( ) );
 				canvas.span( class_( CSS.JAVA_DEF_METHOD ).id( id ) ).content( text );
 			}
 			else if( definition instanceof FieldDefinition ) {
 				FieldDefinition def = ( FieldDefinition ) definition;
 				
-				String id = String.format( "field:%s:%s", def.getName( ), def.getSignature( ) );
+				String id = String.format( "field:%s:%s:%s", def.getDeclaringType( ).getInternalName( ), def.getName( ), def.getSignature( ) );
 				canvas.span( class_( CSS.JAVA_DEF_FIELD ).id( id ) ).content( text );
 			}
 			else if( definition instanceof ParameterDefinition ) {
