@@ -1,4 +1,4 @@
-package net.jsmith.java.decomp.gui;
+package net.jsmith.java.decomp.gui.controllers;
 
 import java.util.Objects;
 
@@ -10,10 +10,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 
-import javafx.scene.layout.BorderPane;
+import javafx.fxml.FXML;
+import javafx.scene.control.Tab;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
+import net.jsmith.java.decomp.gui.ContainerView;
+import net.jsmith.java.decomp.gui.ErrorDialog;
+import net.jsmith.java.decomp.gui.WorkspaceView;
 import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.FieldReference;
 import net.jsmith.java.decomp.workspace.MethodReference;
@@ -23,104 +27,115 @@ import net.jsmith.java.decomp.workspace.TypeReference;
 import net.jsmith.java.decomp.workspace.Workspace;
 import netscape.javascript.JSObject;
 
-public class TypeView extends BorderPane {
-
-	private static final Logger LOG = LoggerFactory.getLogger( TypeView.class );
-	private static final String TYPE_STYLESHEET = TypeView.class.getResource( "/css/type.css" ).toString( );
+public class TypeViewController implements Controller {
 	
-    private final ContainerView containerView;
-    private final Type type;
-    
-    private final WebView contentView;
-    
-    private boolean isDecompiled;
-    private Runnable onDecompiled;
-    
-    public TypeView( ContainerView containerView, Type type ) {
-        this.containerView = Objects.requireNonNull( containerView, "containerView" );
-        this.type = Objects.requireNonNull( type, "type" );
-        
-        this.contentView = new WebView( );
-        this.contentView.setOnDragEntered( null );
+	private static final Logger LOG = LoggerFactory.getLogger( TypeViewController.class );
+
+	public static Tab createView( ContainerView containerView, Type type ) {
+		TypeViewController controller = new TypeViewController( containerView, type );
+		
+		Tab tab = new Tab( type.getMetadata( ).getTypeName( ) );
+		tab.setContent( FXMLUtils.loadView( "TypeView.fxml", controller ) );
+		
+		return tab;
+	}
+	
+	public static TypeViewController getController( Tab tab ) {
+		return FXMLUtils.< TypeViewController >getController( tab.getContent( ) );
+	}
+	
+	private final ContainerView containerView;
+	private final Type type;
+	
+	private boolean isDecompiled;
+	private Runnable onDecompiled;
+	
+	@FXML
+	private WebView contentView;
+	
+	private TypeViewController( ContainerView containerView, Type type ) {
+		this.containerView = Objects.requireNonNull( containerView, "containerView" );
+		this.type = Objects.requireNonNull( type, "type" );
+		
+		this.isDecompiled = false;
+		this.onDecompiled = null;
+	}
+	
+	public Type getType( ) {
+		return this.type;
+	}
+	
+	public void addOnDecompile( Runnable r ) {
+		if( this.isDecompiled ) {
+			r.run( );
+		}
+		else if( this.onDecompiled == null ) {
+			this.onDecompiled = r;
+		}
+		else {
+			Runnable prev = this.onDecompiled;
+			this.onDecompiled = ( ) -> {
+				prev.run( );
+				r.run( );
+			};
+		}
+	}
+	
+	public void seekToReference( Reference reference ) {
+		this.addOnDecompile( ( ) -> {
+			String anchorID = reference.toAnchorID( );
+	    	Node element = this.contentView.getEngine( ).getDocument( ).getElementById( anchorID );
+	    	if( element == null ) {
+	    		return;
+	    	}
+	    	( ( JSObject ) element ).call( "scrollIntoView", true );
+		} );
+	}
+	
+	@FXML
+	private void initialize( ) {
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Initializing TypeViewController for type '{}' of container '{}'.", this.type.getMetadata( ).getFullName( ), this.type.getContainer( ).getName( ) );
+		}
+		
+		// Disable drag and drop for WebView
+		this.contentView.setOnDragEntered( null );
         this.contentView.setOnDragExited( null );
         this.contentView.setOnDragOver( null );
         this.contentView.setOnDragDropped( null );
         this.contentView.setOnDragDetected( null );
         this.contentView.setOnDragDone( null );
         
-        this.setCenter( this.contentView );
-        
-        this.isDecompiled = false;
-        this.onDecompiled = null;
-        
         WebEngine engine = this.contentView.getEngine( );
-    	engine.setUserStyleSheetLocation( TYPE_STYLESHEET );
-        engine.loadContent( "Loading..." );
+        engine.setUserStyleSheetLocation( this.getClass( ).getResource( "/css/type.css" ).toExternalForm( ) );
+        
+        String loadingMessage = String.format( "Decompiling '%s'...", this.type.getMetadata( ).getFullName( ) );
+        engine.loadContent( loadingMessage, "text/plain" );
         
         if( LOG.isInfoEnabled( ) ) {
-        	LOG.info( "Decompiling type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
+        	LOG.info( "Decompiling type '{}' of container '{}'.", this.type.getMetadata( ).getFullName( ), this.type.getContainer( ).getName( ) );
         }
-        DecompilerUtils.defaultDecompile( type ).whenCompleteAsync( ( html, err ) -> {
-    		if( err != null ) {
-    			if( LOG.isErrorEnabled( ) ) {
-    				LOG.error( "Error decompiling type '{}' from container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), err );
-    			}
-                ErrorDialog.displayError( "Error decompiling type", "Error decompiling type: " + type.getMetadata( ).getFullName( ), err );
-            }
-            else {
-            	if( LOG.isInfoEnabled( ) ) {
-            		LOG.info( "Received html for type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
-            	}
-                engine.documentProperty( ).addListener( ( obs, oldVal, newVal ) -> {
-                	if( newVal != null ) {
-                		registerEventHandlers( newVal );
-                	}
-                } );
-            	engine.loadContent( html );
-            }
-    	}, ThreadPools.PLATFORM );
-    }
-    
-    public ContainerView getContainerView( ) {
-        return this.containerView;
-    }
-    
-    public Type getType( ) {
-        return this.type;
-    }
-    
-    public void seekToReference( Reference reference ) {
-    	this.setOnDecompiled( ( ) -> {
-    		this.seekToAnchor( reference.toAnchorID( ) );
-    	} );
-    }
-    
-    private void setOnDecompiled( Runnable runnable ) {
-    	if( this.isDecompiled ) {
-    		runnable.run( );
-    	}
-    	else if( this.onDecompiled != null ) {
-    		Runnable prev = this.onDecompiled;
-    		this.onDecompiled = ( ) -> {
-    			prev.run( );
-    			runnable.run( );
-    		};
-    	}
-    	else {
-    		this.onDecompiled = runnable;
-    	}
-    }
-    
-    private boolean seekToAnchor( String anchorID ) {
-    	Node element = this.contentView.getEngine( ).getDocument( ).getElementById( anchorID );
-    	if( element == null ) {
-    		return false;
-    	}
-    	( ( JSObject ) element ).call( "scrollIntoView", true );
-    	
-    	return true;
-    }
-    
+        DecompilerUtils.defaultDecompile( this.type ).whenCompleteAsync( ( html, err ) -> {
+        	if( err != null ) {
+        		if( LOG.isErrorEnabled( ) ) {
+        			LOG.error( "Error decompiling '{}' of container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), err );
+        		}
+        		ErrorDialog.displayError( "Error decompiling type", "Error decompiling type: " + type.getMetadata( ).getFullName( ), err );
+        	}
+        	else {
+        		if( LOG.isInfoEnabled( ) ) {
+        			LOG.info( "Received type html for '{}' of container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
+        		}
+        		engine.documentProperty( ).addListener( ( obs, oldVal, newVal ) -> {
+        			if( newVal != null ) {
+        				this.registerEventHandlers( newVal );
+        			}
+        		} );
+        		engine.loadContent( html );
+        	}
+        }, ThreadPools.PLATFORM );
+	}
+	
     private void registerEventHandlers( Document document ) {
     	NodeList spans = document.getElementsByTagName( "span" );
     	for( int i = 0; i < spans.getLength( ); i++ ) {

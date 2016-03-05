@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import net.jsmith.java.decomp.gui.controllers.TypeViewController;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Reference;
@@ -62,18 +63,16 @@ public class ContainerView extends BorderPane {
     	
     	Type outerType = this.findOutermostType( type );
         Tab tab = this.typeReferenceTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            return Objects.equals( outerType, ( ( TypeView ) t.getContent( ) ).getType( ) );
+        	return Objects.equals( outerType, TypeViewController.getController( t ).getType( ) );
         } ).findFirst( ).orElseGet( ( ) -> {
-            Tab t = new Tab( );
-            t.setText( outerType.getMetadata( ).getTypeName( ) );
-            t.setContent( new TypeView( ContainerView.this, outerType ) );
+            Tab t = TypeViewController.createView( this, outerType );
             
             typeReferenceTabs.getTabs( ).add( t );
             return t;
         } );
         
         this.typeReferenceTabs.getSelectionModel( ).select( tab );
-    	( ( TypeView ) tab.getContent( ) ).seekToReference( reference );
+    	TypeViewController.getController( tab ).seekToReference( reference );
     }
     
     private Type findOutermostType( Type actType ) {
