@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TreeView?>
+
+<?import net.jsmith.java.decomp.gui.controls.PackageTreeItem?>
+<?import net.jsmith.java.decomp.gui.controls.ClickableCellFactory?>
+
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1">
+	<content>
+		<TreeView fx:id="contentTree" onKeyPressed="#onKeyPressed">
+			<showRoot>false</showRoot>
+			<root>
+				<PackageTreeItem />
+			</root>
+			<cellFactory>
+				<ClickableCellFactory onMouseClicked="#onTreeItemClicked" />
+			</cellFactory>
+		</TreeView>
+	</content>
+</ScrollPane>
+

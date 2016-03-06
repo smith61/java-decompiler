@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import net.jsmith.java.decomp.gui.controllers.ContentViewController;
 import net.jsmith.java.decomp.gui.controllers.TypeViewController;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
 import net.jsmith.java.decomp.workspace.Container;
@@ -22,19 +23,15 @@ public class ContainerView extends BorderPane {
     private final WorkspaceView workspaceView;
     private final Container container;
     
-    private final ContainerContentView contentView;
     private final TabPane typeReferenceTabs;
     
     public ContainerView( WorkspaceView containerGroup, Container container ) {
         this.workspaceView = Objects.requireNonNull( containerGroup, "containerGroup" );
         this.container = Objects.requireNonNull( container, "container" );
         
-        this.contentView = new ContainerContentView( this );
-        this.contentView.setFitToHeight( true );
-        
         this.typeReferenceTabs = new TabPane( );
         
-        this.setLeft( this.contentView );
+        this.setLeft( ContentViewController.createView( this ) );
         this.setCenter( this.typeReferenceTabs );
     }
     
