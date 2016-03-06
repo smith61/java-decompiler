@@ -41,7 +41,7 @@ public class TypeViewController implements Controller {
 	}
 	
 	public static TypeViewController getController( Tab tab ) {
-		return FXMLUtils.< TypeViewController >getController( tab.getContent( ) );
+		return FXMLUtils.getController( tab.getContent( ) );
 	}
 	
 	private final ContainerView containerView;
