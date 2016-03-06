@@ -64,11 +64,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>org.fxmisc.richtext</groupId>
-			<artifactId>richtextfx</artifactId>
-			<version>0.6.10</version>
-		</dependency>
 	</dependencies>
 
 	<build>
