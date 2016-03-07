@@ -12,6 +12,10 @@ import org.w3c.dom.events.EventTarget;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
@@ -50,6 +54,9 @@ public class TypeViewController implements Controller {
 	
 	@FXML
 	private WebView contentView;
+	
+	@FXML private GridPane searchBar;
+	@FXML private TextField searchText;
 	
 	private TypeViewController( ContainerViewController containerView, Type type ) {
 		this.containerView = Objects.requireNonNull( containerView, "containerView" );
@@ -90,6 +97,11 @@ public class TypeViewController implements Controller {
 		} );
 	}
 	
+	public void setSearchBarVisible( boolean visible ) {
+		this.searchBar.setVisible( visible );
+		this.searchBar.setManaged( visible );
+	}
+	
 	@FXML
 	private void initialize( ) {
 		if( LOG.isInfoEnabled( ) ) {
@@ -103,6 +115,8 @@ public class TypeViewController implements Controller {
         this.contentView.setOnDragDropped( null );
         this.contentView.setOnDragDetected( null );
         this.contentView.setOnDragDone( null );
+        
+        this.setSearchBarVisible( false );
         
         WebEngine engine = this.contentView.getEngine( );
         engine.setUserStyleSheetLocation( this.getClass( ).getResource( "/css/type.css" ).toExternalForm( ) );
@@ -132,6 +146,17 @@ public class TypeViewController implements Controller {
         		engine.loadContent( html );
         	}
         }, ThreadPools.PLATFORM );
+	}
+	
+	@FXML
+	private void onKeyPressed( KeyEvent evt ) {
+		if( evt.getCode( ) == KeyCode.F ) {
+			if( evt.isControlDown( ) ) {
+				evt.consume( );
+				
+				this.setSearchBarVisible( true );
+			}
+		}
 	}
 	
     private void registerEventHandlers( Document document ) {
