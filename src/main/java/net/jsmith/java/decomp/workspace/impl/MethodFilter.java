@@ -27,8 +27,13 @@ public class MethodFilter extends Filter {
 
 	@Override
 	public MethodVisitor visitMethod( int access, String name, String desc, String signature, String[ ] exceptions ) {
-		if( name.equals( this.method.getMethodName( ) ) && desc.equals( this.method.getMethodSignature( ) ) ) {
-			this.accept = true;
+		if( name.equals( this.method.getMethodName( ) ) ) {
+			String methodSig = this.method.getMethodSignature( );
+			// We attempt to match against either desc or signature
+			//  as we may be resolving a generic type signature.
+			if( methodSig.equals( desc ) || methodSig.equals( signature ) ) {
+				this.accept = true;
+			}
 		}
 		return null;
 	}
