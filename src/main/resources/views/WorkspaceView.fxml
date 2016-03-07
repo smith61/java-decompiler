@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.TabPane?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml/1" onDragOver="#onDragOver" onDragDropped="#onDragDropped">
+	<children>
+		<TabPane fx:id="containerTabs" />
+	</children>
+</StackPane>
+

@@ -1,9 +1,11 @@
 package net.jsmith.java.decomp.gui;
 
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import net.jsmith.java.decomp.gui.controllers.WorkspaceViewController;
 import net.jsmith.java.decomp.workspace.Workspace;
 import net.jsmith.java.decomp.workspace.impl.WorkspaceImpl;
 
@@ -20,14 +22,12 @@ public class Application extends javafx.application.Application {
         VBox root = new VBox( );
         
         Workspace defaultWorkspace = new WorkspaceImpl( "default" );
-        WorkspaceView containerGroup = new WorkspaceView( defaultWorkspace );
-        containerGroup.setFitToHeight( true );
-        containerGroup.setFitToWidth( true );
         
-        ApplicationMenuBar menuBar = new ApplicationMenuBar( containerGroup );
+        Node workspaceView = WorkspaceViewController.createView( defaultWorkspace );
+        ApplicationMenuBar menuBar = new ApplicationMenuBar( WorkspaceViewController.getController( workspaceView ) );
         
-        root.getChildren( ).addAll( menuBar, containerGroup );
-        VBox.setVgrow( containerGroup, Priority.ALWAYS );
+        root.getChildren( ).addAll( menuBar, workspaceView );
+        VBox.setVgrow( workspaceView, Priority.ALWAYS );
         
         primaryStage.setScene( new Scene( root, 600, 480 ) );
         primaryStage.show( );

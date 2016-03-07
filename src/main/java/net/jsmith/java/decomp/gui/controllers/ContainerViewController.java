@@ -16,7 +16,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import net.jsmith.java.decomp.gui.ListenerUtils;
-import net.jsmith.java.decomp.gui.WorkspaceView;
 import net.jsmith.java.decomp.gui.controls.TypeTreeItem;
 import net.jsmith.java.decomp.gui.controls.TypeTreeView;
 import net.jsmith.java.decomp.utils.TypeNameUtils;
@@ -30,7 +29,7 @@ public class ContainerViewController implements Controller {
 
 	private static final Logger LOG = LoggerFactory.getLogger( ContainerViewController.class );
 	
-	public static Tab createView( WorkspaceView workspaceView, Container container ) {
+	public static Tab createView( WorkspaceViewController workspaceView, Container container ) {
 		ContainerViewController controller = new ContainerViewController( workspaceView, container );
 		
 		Tab tab = new Tab( container.getName( ) );
@@ -43,7 +42,7 @@ public class ContainerViewController implements Controller {
 		return FXMLUtils.getController( tab.getContent( ) );
 	}
 	
-	private final WorkspaceView workspaceView;
+	private final WorkspaceViewController workspaceView;
 	private final Container container;
 	
 	@FXML
@@ -52,12 +51,12 @@ public class ContainerViewController implements Controller {
 	@FXML
 	private TabPane typeTabs;
 	
-	private ContainerViewController( WorkspaceView workspaceView, Container container ) {
+	private ContainerViewController( WorkspaceViewController workspaceView, Container container ) {
 		this.workspaceView = Objects.requireNonNull( workspaceView, "workspaceView" );
 		this.container = Objects.requireNonNull( container, "container" );
 	}
 	
-	public WorkspaceView getWorkspaceView( ) {
+	public WorkspaceViewController getWorkspaceView( ) {
 		return this.workspaceView;
 	}
 	

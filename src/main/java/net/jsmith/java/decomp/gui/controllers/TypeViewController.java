@@ -16,7 +16,6 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.gui.ErrorDialog;
-import net.jsmith.java.decomp.gui.WorkspaceView;
 import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.FieldReference;
 import net.jsmith.java.decomp.workspace.MethodReference;
@@ -186,7 +185,7 @@ public class TypeViewController implements Controller {
     		LOG.info( "Handling reference click for id '{}'.", reference.toAnchorID( ) );
     	}
     	
-    	WorkspaceView workspaceView = this.containerView.getWorkspaceView( );
+    	WorkspaceViewController workspaceView = this.containerView.getWorkspaceView( );
     	Workspace workspace = workspaceView.getWorkspace( );
     	workspace.resolveReference( reference ).whenCompleteAsync( ( types, err ) -> {
     		if( err != null ) {

@@ -11,12 +11,13 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import net.jsmith.java.decomp.gui.controllers.WorkspaceViewController;
 
 public class ApplicationMenuBar extends MenuBar {
 
-    private final WorkspaceView containerGroup;
+    private final WorkspaceViewController containerGroup;
     
-    public ApplicationMenuBar( WorkspaceView containerGroup ) {
+    public ApplicationMenuBar( WorkspaceViewController containerGroup ) {
         this.containerGroup = Objects.requireNonNull( containerGroup, "containerGroup" );
         
         this.getMenus( ).add( this.buildFileMenu( ) );
