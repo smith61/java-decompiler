@@ -14,13 +14,13 @@ public class FXMLUtils {
 	
 	private static final Logger LOG = LoggerFactory.getLogger( FXMLUtils.class );
 
-	public static Node loadView( String viewName, Controller controller ) {
+	public static < T extends Node > T loadView( String viewName, Controller controller ) {
 		String resName = "/views/" + viewName;
 		try( InputStream is = FXMLUtils.class.getResourceAsStream( resName ) ) {
 			FXMLLoader loader = new FXMLLoader( );
 			loader.setController( controller );
 			
-			Node node = loader.load( is );
+			T node = loader.load( is );
 			node.setUserData( controller );
 			
 			return node;

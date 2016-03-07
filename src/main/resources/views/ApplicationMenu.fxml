@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+
+<MenuBar xmlns:fx="http://javafx.com/fxml/1" fx:id="applicationMenu">
+	<menus>
+		<Menu>
+			<text>File</text>
+			<items>
+				<MenuItem onAction="#openFileBrowse">
+					<text>Open</text>
+				</MenuItem>
+				<SeparatorMenuItem />
+				<MenuItem onAction="#exitApplication">
+					<text>Exit</text>
+				</MenuItem>
+			</items>
+		</Menu>
+	</menus>
+</MenuBar>
+
