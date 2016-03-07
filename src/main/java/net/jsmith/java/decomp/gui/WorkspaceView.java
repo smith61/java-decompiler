@@ -14,6 +14,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import net.jsmith.java.decomp.gui.controllers.ContainerViewController;
 import net.jsmith.java.decomp.workspace.Container;
 import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
@@ -57,7 +58,7 @@ public class WorkspaceView extends ScrollPane {
         	while( c.next( ) ) {
         		if( c.wasRemoved( ) ) {
         			for( Tab removed : c.getRemoved( ) ) {
-        				ContainerView cv = ( ContainerView ) removed.getContent( );
+        				ContainerViewController cv = ContainerViewController.getController( removed );
         				cv.getContainer( ).close( );
         			}
         		}
@@ -72,7 +73,7 @@ public class WorkspaceView extends ScrollPane {
         		LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
         	}
         	this.containersTab.getTabs( ).stream( ).filter( ( tab ) -> {
-        		return ( ( ContainerView ) tab.getContent( ) ).getContainer( ) == container;
+        		return ContainerViewController.getController( tab ).getContainer( ) == container;
         	} ).findFirst( ).ifPresent( ( tab ) -> {
         		this.containersTab.getTabs( ).remove( tab );
         	} );
@@ -90,7 +91,7 @@ public class WorkspaceView extends ScrollPane {
     		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
     	}
         Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-            ContainerView view = ( ContainerView ) t.getContent( );
+            ContainerViewController view = ContainerViewController.getController( t );
             return view.getContainer( ) == type.getContainer( );
         } ).findFirst( ).orElseThrow( ( ) -> {
         	if( LOG.isWarnEnabled( ) ) {
@@ -100,7 +101,7 @@ public class WorkspaceView extends ScrollPane {
         } );
         
         this.containersTab.getSelectionModel( ).select( tab );
-        ( ( ContainerView ) tab.getContent( ) ).openAndShowType( type );
+        ContainerViewController.getController( tab ).openAndShowType( type );
     }
     
     public void openAndShowType( Type type, Reference reference ) {
@@ -108,7 +109,7 @@ public class WorkspaceView extends ScrollPane {
     		LOG.info( "Opening and showing type '{}' in container '{}' and seeking to reference '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), reference.toAnchorID( ) );
     	}
     	Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-    		ContainerView view = ( ContainerView ) t.getContent( );
+    		ContainerViewController view = ContainerViewController.getController( t );
     		return view.getContainer( ) == type.getContainer( );
     	} ).findFirst( ).orElseThrow( ( ) -> {
     		if( LOG.isWarnEnabled( ) ) {
@@ -118,7 +119,7 @@ public class WorkspaceView extends ScrollPane {
     	} );
     	
     	this.containersTab.getSelectionModel( ).select( tab );
-    	( ( ContainerView ) tab.getContent( ) ).openAndShowType( type, reference );
+    	ContainerViewController.getController( tab ).openAndShowType( type, reference );
     }
     
     public void openAndShowFile( File file ) {
@@ -134,12 +135,10 @@ public class WorkspaceView extends ScrollPane {
     	}
     	
     	Tab tab = this.containersTab.getTabs( ).stream( ).filter( ( t ) -> {
-    		ContainerView view = ( ContainerView ) t.getContent( );
+    		ContainerViewController view = ContainerViewController.getController( t );
     		return view.getContainer( ) == container;
     	} ).findFirst( ).orElseGet( ( ) -> {
-    		Tab t = new Tab( );
-        	t.setText( container.getName( ) );
-        	t.setContent( new ContainerView( this, container ) );
+    		Tab t = ContainerViewController.createView( this, container );
         	
         	this.containersTab.getTabs( ).add( t );
         	return t;

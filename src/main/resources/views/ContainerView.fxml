@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.TabPane?>
+
+<?import net.jsmith.java.decomp.gui.controls.TypeTreeView?>
+<?import net.jsmith.java.decomp.gui.controls.ClickableCellFactory?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1">
+	<left>
+		<TypeTreeView fx:id="contentTree" onKeyPressed="#onContentTreeKeyPress">
+			<cellFactory>
+				<ClickableCellFactory onMouseClicked="#onContentTreeMouseClick" />
+			</cellFactory>
+		</TypeTreeView>
+	</left>
+	<center>
+		<TabPane fx:id="typeTabs" />
+	</center>
+</BorderPane>
+

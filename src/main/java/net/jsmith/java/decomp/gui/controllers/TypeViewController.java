@@ -15,7 +15,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
-import net.jsmith.java.decomp.gui.ContainerView;
 import net.jsmith.java.decomp.gui.ErrorDialog;
 import net.jsmith.java.decomp.gui.WorkspaceView;
 import net.jsmith.java.decomp.utils.ThreadPools;
@@ -31,7 +30,7 @@ public class TypeViewController implements Controller {
 	
 	private static final Logger LOG = LoggerFactory.getLogger( TypeViewController.class );
 
-	public static Tab createView( ContainerView containerView, Type type ) {
+	public static Tab createView( ContainerViewController containerView, Type type ) {
 		TypeViewController controller = new TypeViewController( containerView, type );
 		
 		Tab tab = new Tab( type.getMetadata( ).getTypeName( ) );
@@ -44,7 +43,7 @@ public class TypeViewController implements Controller {
 		return FXMLUtils.getController( tab.getContent( ) );
 	}
 	
-	private final ContainerView containerView;
+	private final ContainerViewController containerView;
 	private final Type type;
 	
 	private boolean isDecompiled;
@@ -53,7 +52,7 @@ public class TypeViewController implements Controller {
 	@FXML
 	private WebView contentView;
 	
-	private TypeViewController( ContainerView containerView, Type type ) {
+	private TypeViewController( ContainerViewController containerView, Type type ) {
 		this.containerView = Objects.requireNonNull( containerView, "containerView" );
 		this.type = Objects.requireNonNull( type, "type" );
 		
