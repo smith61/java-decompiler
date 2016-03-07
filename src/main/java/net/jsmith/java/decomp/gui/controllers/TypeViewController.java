@@ -1,5 +1,6 @@
 package net.jsmith.java.decomp.gui.controllers;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.gui.ErrorDialog;
+import net.jsmith.java.decomp.utils.IOUtils;
 import net.jsmith.java.decomp.utils.ThreadPools;
 import net.jsmith.java.decomp.workspace.FieldReference;
 import net.jsmith.java.decomp.workspace.MethodReference;
@@ -100,6 +102,9 @@ public class TypeViewController implements Controller {
 	public void setSearchBarVisible( boolean visible ) {
 		this.searchBar.setVisible( visible );
 		this.searchBar.setManaged( visible );
+		if( visible ) {
+			this.searchText.requestFocus( );
+		}
 	}
 	
 	@FXML
@@ -117,6 +122,9 @@ public class TypeViewController implements Controller {
         this.contentView.setOnDragDone( null );
         
         this.setSearchBarVisible( false );
+        this.searchText.textProperty( ).addListener( ( obs, oldVal, newVal ) -> {
+        	this.updateSearch( newVal );
+        } );
         
         WebEngine engine = this.contentView.getEngine( );
         engine.setUserStyleSheetLocation( this.getClass( ).getResource( "/css/type.css" ).toExternalForm( ) );
@@ -140,6 +148,7 @@ public class TypeViewController implements Controller {
         		}
         		engine.documentProperty( ).addListener( ( obs, oldVal, newVal ) -> {
         			if( newVal != null ) {
+        				this.loadScripts( );
         				this.registerEventHandlers( newVal );
         			}
         		} );
@@ -177,6 +186,20 @@ public class TypeViewController implements Controller {
     	if( this.onDecompiled != null ) {
     		this.onDecompiled.run( );
     		this.onDecompiled = null;
+    	}
+    }
+    
+    private void loadScripts( ) {
+    	try {
+    		WebEngine engine = this.contentView.getEngine( );
+    		engine.executeScript( IOUtils.readResourceAsString( "/js/findAndReplaceDOMText.js" ) );
+    		engine.executeScript( IOUtils.readResourceAsString( "/js/text_search.js" ) );
+    	}
+    	catch( IOException ioe ) {
+    		if( LOG.isErrorEnabled( ) ) {
+    			LOG.error( "Error loading scripts into document.", ioe );
+    		}
+    		ErrorDialog.displayError( "Error loading javascript utility scripts", "Error loading javascript utility scripts.", ioe );
     	}
     }
     
@@ -229,6 +252,11 @@ public class TypeViewController implements Controller {
     			}
     		}
     	}, ThreadPools.PLATFORM );
+    }
+    
+    private void updateSearch( String text ) {
+    	JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
+    	root.call( "update_search", text );
     }
     
 }

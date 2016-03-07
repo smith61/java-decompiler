@@ -23,7 +23,9 @@ pre span.java_line:before {
 }
 
 
-
+.java_search {
+	background-color: yellow;
+}
 .java_comment {
 	color: #008000
 }
