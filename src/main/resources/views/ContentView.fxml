@@ -3,20 +3,16 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TreeView?>
 
-<?import net.jsmith.java.decomp.gui.controls.PackageTreeItem?>
 <?import net.jsmith.java.decomp.gui.controls.ClickableCellFactory?>
+<?import net.jsmith.java.decomp.gui.controls.TypeTreeView?>
 
 <ScrollPane xmlns:fx="http://javafx.com/fxml/1">
 	<content>
-		<TreeView fx:id="contentTree" onKeyPressed="#onKeyPressed">
-			<showRoot>false</showRoot>
-			<root>
-				<PackageTreeItem />
-			</root>
+		<TypeTreeView fx:id="contentTree" onKeyPressed="#onKeyPressed">
 			<cellFactory>
 				<ClickableCellFactory onMouseClicked="#onTreeItemClicked" />
 			</cellFactory>
-		</TreeView>
+		</TypeTreeView>
 	</content>
 </ScrollPane>
 
