@@ -17,15 +17,19 @@ public class Application extends javafx.application.Application {
         launch( args );
     }
     
+    private final Workspace defaultWorkspace;
+    
+    public Application( ) {
+    	this.defaultWorkspace = new WorkspaceImpl( "default" );
+    }
+    
     @Override
     public void start( Stage primaryStage ) throws Exception {
         primaryStage.setTitle( "Java Decompiler" );
         
         VBox root = new VBox( );
         
-        Workspace defaultWorkspace = new WorkspaceImpl( "default" );
-        
-        Node workspaceView = WorkspaceViewController.createView( defaultWorkspace );
+        Node workspaceView = WorkspaceViewController.createView( this.defaultWorkspace );
         MenuBar menuBar = ApplicationMenuController.createView( WorkspaceViewController.getController( workspaceView ) );
         
         root.getChildren( ).addAll( menuBar, workspaceView );
@@ -33,11 +37,12 @@ public class Application extends javafx.application.Application {
         
         primaryStage.setScene( new Scene( root, 600, 480 ) );
         primaryStage.show( );
-        
-        primaryStage.setOnHidden( ( evt ) -> {
-        	defaultWorkspace.close( );
-        	System.gc( );
-        } );
     }
+
+	@Override
+	public void stop( ) throws Exception {
+		this.defaultWorkspace.close( );
+		System.gc( );
+	}
     
 }
