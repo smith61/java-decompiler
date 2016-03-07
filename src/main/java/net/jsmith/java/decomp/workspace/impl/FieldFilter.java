@@ -27,8 +27,11 @@ public class FieldFilter extends Filter {
 
 	@Override
 	public FieldVisitor visitField( int access, String name, String desc, String signature, Object value ) {
-		if( name.equals( field.getFieldName( ) ) && desc.equals( field.getFieldType( ) ) ) {
-			this.accept = true;
+		if( name.equals( this.field.getFieldName( ) ) ) {
+			String fieldType = this.field.getFieldType( );
+			if( fieldType.equals( desc ) || fieldType.equals( signature ) ) {
+				this.accept = true;
+			}
 		}
 		
 		return null;
