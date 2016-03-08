@@ -1,0 +1,27 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'net.jsmith.java.decomp.gui.Application'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+configurations {
+	runtime.exclude group: 'org.springframework', module: 'spring-webmvc'
+	runtime.exclude group: 'javax.servlet', module: 'servlet-api'
+}
+dependencies {
+	compile 'org.bitbucket.mstrobel:procyon-compilertools:0.5.32'
+	compile 'org.ow2.asm:asm:5.0.4'
+	compile 'org.slf4j:slf4j-api:1.7.16'
+	compile 'ch.qos.logback:logback-core:1.1.5'
+	compile 'ch.qos.logback:logback-classic:1.1.5'
+	compile 'org.rendersnake:rendersnake:1.9.0' 
+}
+repositories {
+	mavenCentral( )
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.6'
+}
