@@ -229,7 +229,7 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 			attribs.add( "ref_type", "field" );
 			attribs.add( "type", ref.getDeclaringType( ).getInternalName( ) );
 			attribs.add( "field_name", ref.getName( ) );
-			attribs.add( "field_type", ref.getFieldType( ).getInternalName( ) );
+			attribs.add( "field_type", ref.getFieldType( ).getSignature( ) );
 
 			this.writeStyled( text, attribs );
 		}
