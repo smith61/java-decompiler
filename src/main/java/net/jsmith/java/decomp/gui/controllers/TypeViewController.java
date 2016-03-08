@@ -159,6 +159,7 @@ public class TypeViewController implements Controller {
         			if( newVal != null ) {
         				this.loadScripts( );
         				this.registerEventHandlers( newVal );
+        				this.loadLineStylesheet( newVal );
         			}
         		} );
         		engine.loadContent( html );
@@ -212,6 +213,32 @@ public class TypeViewController implements Controller {
     			LOG.error( "Error loading scripts into document.", ioe );
     		}
     		ErrorDialog.displayError( "Error loading javascript utility scripts", "Error loading javascript utility scripts.", ioe );
+    	}
+    }
+    
+    private void loadLineStylesheet( Document document ) {
+    	try {
+    		long linecount = XMLStreamSupport.stream( document.getElementsByTagName( "span" ) ).filter( ( n ) -> {
+    			Node style = n.getAttributes( ).getNamedItem( "class" );
+    			return style != null && style.getTextContent( ).contains( "java_line" );
+    		} ).count( );
+    		
+    		int digits = Long.toString( linecount ).length( );
+    		
+    		String css = IOUtils.readResourceAsString( "/css/line_numbers.css.template" );
+    		css = css.replace( "${NUM_DIGITS}", "" + digits );
+    		
+    		Node styleNode = document.createElement( "style" );
+    		Node textNode  = document.createTextNode( css );
+    		
+    		styleNode.appendChild( textNode );
+    		document.getElementsByTagName( "head" ).item( 0 ).appendChild( styleNode );
+    	}
+    	catch( IOException ioe ) {
+    		if( LOG.isErrorEnabled( ) ) {
+    			LOG.error( "Error loading stylesheets into WebView.", ioe );
+    		}
+    		ErrorDialog.displayError( "Error loading stylesheets", "Error loading stylesheets into WebView", ioe );
     	}
     }
     
