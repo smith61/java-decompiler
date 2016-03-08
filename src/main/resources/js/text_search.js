@@ -10,15 +10,21 @@ var search_state = {
 		this.cur_match = -1
 	},
 	search: function( search_text ) {
+		function escapeRegExp( s ) {
+			return String( s ).replace( /([.*+?^=!:${}()|[\]\/\\])/g, '\\$1' );
+		}
+		
 		var self = this
 		
 		self.revert( )
 		if( search_text ) {
+			var regex = RegExp( escapeRegExp( search_text ), 'gi' )
+			
 			var current_match = undefined
 			self.finder = findAndReplaceDOMText(
 				document.body,
 				{
-					find: search_text,
+					find: regex,
 					replace: function( portion, match ) {
 						var s = document.createElement( "span" )
 						s.className = "highlight"
