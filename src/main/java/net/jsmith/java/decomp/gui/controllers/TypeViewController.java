@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 
 import javafx.fxml.FXML;
@@ -23,6 +22,7 @@ import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.gui.ErrorDialog;
 import net.jsmith.java.decomp.utils.IOUtils;
 import net.jsmith.java.decomp.utils.ThreadPools;
+import net.jsmith.java.decomp.utils.XMLStreamSupport;
 import net.jsmith.java.decomp.workspace.FieldReference;
 import net.jsmith.java.decomp.workspace.MethodReference;
 import net.jsmith.java.decomp.workspace.Reference;
@@ -185,19 +185,15 @@ public class TypeViewController implements Controller {
 	}
 	
     private void registerEventHandlers( Document document ) {
-    	NodeList spans = document.getElementsByTagName( "span" );
-    	for( int i = 0; i < spans.getLength( ); i++ ) {
-    		Node span = spans.item( i );
-    		
-    		NamedNodeMap attribs = span.getAttributes( );
-    		Node refTypeNode = attribs.getNamedItem( "ref_type" );
-    		if( refTypeNode == null ) continue;
-    		
-    		Reference reference = this.createReferenceFromNode( attribs );
-    		( ( EventTarget ) span ).addEventListener( "click", ( evt ) -> {
+    	XMLStreamSupport.stream( document.getElementsByTagName( "span" ) ).filter( ( n ) -> {
+    		return n.getAttributes( ).getNamedItem( "ref_type" ) != null;
+    	} ).forEach( ( n ) -> {
+    		Reference reference = this.createReferenceFromNode( n.getAttributes( ) );
+    		( ( EventTarget ) n ).addEventListener( "click", ( evt ) -> {
     			this.handleReferenceClick( reference );
     		}, true );
-    	}
+    	} );
+    	
     	this.isDecompiled = true;
     	if( this.onDecompiled != null ) {
     		this.onDecompiled.run( );
