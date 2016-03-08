@@ -14,8 +14,9 @@
 	<bottom>
 		<GridPane fx:id="searchBar">
 			<children>
-				<TextField fx:id="searchText" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-				<Button text="Search" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+				<TextField fx:id="searchText" onKeyPressed="#onSearchKeyPress" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+				<Button text="Next" onAction="#nextMatch" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+				<Button text="Previous" onAction="#prevMatch" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 			</children>
 
 			<columnConstraints>

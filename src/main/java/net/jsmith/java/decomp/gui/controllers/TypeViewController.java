@@ -168,6 +168,13 @@ public class TypeViewController implements Controller {
 		}
 	}
 	
+	@FXML
+	private void onSearchKeyPress( KeyEvent evt ) {
+		if( evt.getCode( ) == KeyCode.ENTER ) {
+			this.nextMatch( );
+		}
+	}
+	
     private void registerEventHandlers( Document document ) {
     	NodeList spans = document.getElementsByTagName( "span" );
     	for( int i = 0; i < spans.getLength( ); i++ ) {
@@ -257,6 +264,18 @@ public class TypeViewController implements Controller {
     private void updateSearch( String text ) {
     	JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
     	root.call( "update_search", text );
+    }
+    
+    @FXML
+    private void nextMatch( ) {
+    	JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
+    	root.call( "next_match" );
+    }
+    
+    @FXML
+    private void prevMatch( ) {
+    	JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
+    	root.call( "prev_match" );
     }
     
 }
