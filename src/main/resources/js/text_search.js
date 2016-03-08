@@ -50,7 +50,7 @@ var search_state = {
 	},
 	
 	select: function( match_index ) {
-		if( this.matches ) {
+		if( this.matches.length > 0 ) {
 			if( match_index >= this.matches.length ) {
 				match_index = 0
 			}
