@@ -104,7 +104,15 @@ public class TypeViewController implements Controller {
 		this.searchBar.setManaged( visible );
 		if( visible ) {
 			this.searchText.requestFocus( );
+			this.updateSearch( this.searchText.getText( ) );
 		}
+		else {
+			this.updateSearch( "" );
+		}
+	}
+	
+	public boolean isSearchBarVisible( ) {
+		return this.searchBar.isVisible( );
 	}
 	
 	@FXML
@@ -121,7 +129,8 @@ public class TypeViewController implements Controller {
         this.contentView.setOnDragDetected( null );
         this.contentView.setOnDragDone( null );
         
-        this.setSearchBarVisible( false );
+        this.searchBar.setVisible( false );
+        this.searchBar.setManaged( false );
         this.searchText.textProperty( ).addListener( ( obs, oldVal, newVal ) -> {
         	this.updateSearch( newVal );
         } );
@@ -163,7 +172,7 @@ public class TypeViewController implements Controller {
 			if( evt.isControlDown( ) ) {
 				evt.consume( );
 				
-				this.setSearchBarVisible( true );
+				this.setSearchBarVisible( !this.isSearchBarVisible( ) );
 			}
 		}
 	}
