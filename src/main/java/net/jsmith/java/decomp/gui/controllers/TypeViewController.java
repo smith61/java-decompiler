@@ -17,6 +17,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebErrorEvent;
 import javafx.scene.web.WebView;
 import net.jsmith.java.decomp.decompiler.DecompilerUtils;
 import net.jsmith.java.decomp.gui.ErrorDialog;
@@ -29,6 +30,7 @@ import net.jsmith.java.decomp.workspace.Reference;
 import net.jsmith.java.decomp.workspace.Type;
 import net.jsmith.java.decomp.workspace.TypeReference;
 import net.jsmith.java.decomp.workspace.Workspace;
+import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
 public class TypeViewController implements Controller {
@@ -128,6 +130,7 @@ public class TypeViewController implements Controller {
         this.contentView.setOnDragDropped( null );
         this.contentView.setOnDragDetected( null );
         this.contentView.setOnDragDone( null );
+        this.contentView.getEngine( ).setOnError( this::onJavascriptError );
         
         this.searchBar.setVisible( false );
         this.searchBar.setManaged( false );
@@ -185,6 +188,13 @@ public class TypeViewController implements Controller {
 		}
 	}
 	
+	private void onJavascriptError( WebErrorEvent evt ) {
+		if( LOG.isErrorEnabled( ) ) {
+			LOG.error( "Error in javascript: '{}'.", evt.getMessage( ), evt.getException( ) );
+		}
+		ErrorDialog.displayError( "Error in javascript", "Error in javascript: " + evt.getMessage( ), evt.getException( ) );
+	}
+	
     private void registerEventHandlers( Document document ) {
     	XMLStreamSupport.stream( document.getElementsByTagName( "span" ) ).filter( ( n ) -> {
     		return n.getAttributes( ).getNamedItem( "ref_type" ) != null;
@@ -208,11 +218,11 @@ public class TypeViewController implements Controller {
     		engine.executeScript( IOUtils.readResourceAsString( "/js/findAndReplaceDOMText.js" ) );
     		engine.executeScript( IOUtils.readResourceAsString( "/js/text_search.js" ) );
     	}
-    	catch( IOException ioe ) {
+    	catch( IOException | JSException err ) {
     		if( LOG.isErrorEnabled( ) ) {
-    			LOG.error( "Error loading scripts into document.", ioe );
+    			LOG.error( "Error loading scripts into document.", err );
     		}
-    		ErrorDialog.displayError( "Error loading javascript utility scripts", "Error loading javascript utility scripts.", ioe );
+    		ErrorDialog.displayError( "Error loading javascript utility scripts", "Error loading javascript utility scripts.", err );
     	}
     }
     
