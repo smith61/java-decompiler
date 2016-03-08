@@ -23,9 +23,14 @@ pre span.java_line:before {
 }
 
 
-.java_search {
-	background-color: yellow;
+.highlight {
+	background-color: #ffff66;
 }
+.highlight_current {
+	background-color: #3399ff;
+	color: white;
+}
+
 .java_comment {
 	color: #008000
 }

@@ -7,47 +7,61 @@ var search_state = {
 		this.finder && this.finder.revert( )
 		
 		this.matches = []
-		this.cur_match = 0
+		this.cur_match = -1
 	},
 	search: function( search_text ) {
 		var self = this
 		
 		self.revert( )
 		if( search_text ) {
+			var current_match = undefined
 			self.finder = findAndReplaceDOMText(
 				document.body,
 				{
 					find: search_text,
 					replace: function( portion, match ) {
 						var s = document.createElement( "span" )
-						s.className = "java_search"
+						s.className = "highlight"
 						s.textContent = portion.text
 						
 						if( portion.index == 0 ) {
-							self.matches.push( s )
+							current_match = [ ]
+							self.matches.push( current_match )
 						}
+						current_match.push( s )
 						return s
 					}
 				}
 			)
-			if( self.matches ) {
-				self.matches[ 0 ].scrollIntoView( true )
-			}
+			this.select( 0 )
 		}
 	},
 	next_match: function( ) {
-		if( this.matches ) {
-			this.cur_match = ( this.cur_match + 1 ) % this.matches.length
-			this.matches[ this.cur_match ].scrollIntoView( true )
-		}
+		this.select( this.cur_match + 1 )
 	},
 	prev_match: function( ) {
+		this.select( this.cur_match - 1 )
+	},
+	
+	select: function( match_index ) {
 		if( this.matches ) {
-			this.cur_match = ( this.cur_match - 1 )
-			if( this.cur_match < 0 ) {
-				this.cur_match = this.matches.length - 1
+			if( match_index >= this.matches.length ) {
+				match_index = 0
 			}
-			this.matches[ this.cur_match ].scrollIntoView( true )
+			if( match_index < 0 ) {
+				match_index = this.matches.length - 1
+			}
+			this.matches[ match_index ][ 0 ].scrollIntoView( true )
+			this.matches[ match_index ].forEach( function( e ) {
+				e.className = "highlight_current"
+			} )
+			
+			if( this.cur_match != -1 ) {
+				this.matches[ this.cur_match ].forEach( function( e ) {
+					e.className = "highlight"
+				} )
+			}
+			this.cur_match = match_index
 		}
 	}
 }
