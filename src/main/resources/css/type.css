@@ -26,15 +26,27 @@ body {
 
 .java_ref_type {
 	cursor: pointer;
-	text-decoration: underline;
+	color: #333;
+ 	color: transparent;
+	text-shadow: 0 0 #333, .08em 0 0 #fff, 0 0, -.08em 0 0 #fff;
+	background: -webkit-linear-gradient(#999, #999) center 1.09em no-repeat;
+	background: linear-gradient(#999, #999) center 1.09em no-repeat;
 }
 .java_ref_field {
 	cursor: pointer;
-	text-decoration: underline;
+	color: #333;
+ 	color: transparent;
+	text-shadow: 0 0 #333, .08em 0 0 #fff, 0 0, -.08em 0 0 #fff;
+	background: -webkit-linear-gradient(#999, #999) center 1.09em no-repeat;
+	background: linear-gradient(#999, #999) center 1.09em no-repeat;
 }
 .java_ref_method {
 	cursor: pointer;
-	text-decoration: underline;
+	color: #333;
+ 	color: transparent;
+	text-shadow: 0 0 #333, .08em 0 0 #fff, 0 0, -.08em 0 0 #fff;
+	background: -webkit-linear-gradient(#999, #999) center 1.09em no-repeat;
+	background: linear-gradient(#999, #999) center 1.09em no-repeat;
 }
 .java_ref_variable {
 	color: #bf7d40;
