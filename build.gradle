@@ -3,7 +3,7 @@ apply plugin: 'application'
 
 apply plugin: 'eclipse'
 
-mainClassName = 'net.jsmith.java.decomp.gui.Application'
+mainClassName = 'net.jsmith.java.byteforge.gui.Application'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8

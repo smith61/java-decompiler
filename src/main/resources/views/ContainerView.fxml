@@ -3,8 +3,8 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.control.TabPane?>
 
-<?import net.jsmith.java.decomp.gui.controls.TypeTreeView?>
-<?import net.jsmith.java.decomp.gui.controls.ClickableCellFactory?>
+<?import net.jsmith.java.byteforge.gui.controls.TypeTreeView?>
+<?import net.jsmith.java.byteforge.gui.controls.ClickableCellFactory?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1">
 	<left>
