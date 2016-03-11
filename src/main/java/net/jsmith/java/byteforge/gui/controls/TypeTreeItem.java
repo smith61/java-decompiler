@@ -16,13 +16,13 @@ public class TypeTreeItem extends SortedTreeItem {
 		super( name );
 		
 		this.type = Objects.requireNonNull( type, "type" );
-        Metadata metadata = type.getMetadata( );
-        if( Modifier.isInterface( metadata.getModifiers( ) ) ) {
-        	this.setGraphic( new ImageView( Icons.INTERFACE_ICON ) );
-        }
-        else {
-        	this.setGraphic( new ImageView( Icons.CLASS_ICON ) );
-        }
+		Metadata metadata = type.getMetadata( );
+		if( Modifier.isInterface( metadata.getModifiers( ) ) ) {
+			this.setGraphic( new ImageView( Icons.INTERFACE_ICON ) );
+		}
+		else {
+			this.setGraphic( new ImageView( Icons.CLASS_ICON ) );
+		}
 	}
 	
 	public Type getType( ) {

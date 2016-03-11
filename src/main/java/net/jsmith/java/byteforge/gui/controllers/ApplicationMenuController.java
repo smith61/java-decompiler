@@ -32,18 +32,17 @@ public class ApplicationMenuController implements Controller {
 		this.workspaceController = Objects.requireNonNull( workspaceController, "workspaceController" );
 	}
 	
-	
 	@FXML
 	private void openFileBrowse( ActionEvent evt ) {
 		FileChooser fChooser = new FileChooser( );
-        fChooser.getExtensionFilters( ).add( new ExtensionFilter( "Jar File", "*.jar" ) );
-        
-        List< File > selected = fChooser.showOpenMultipleDialog( this.applicationMenu.getScene( ).getWindow( ) );
-        if( selected != null ) {
-            selected.stream( ).forEach( ( file ) -> {
-                this.workspaceController.openAndShowFile( file );
-            } );
-        }
+		fChooser.getExtensionFilters( ).add( new ExtensionFilter( "Jar File", "*.jar" ) );
+		
+		List< File > selected = fChooser.showOpenMultipleDialog( this.applicationMenu.getScene( ).getWindow( ) );
+		if( selected != null ) {
+			selected.stream( ).forEach( ( file ) -> {
+				this.workspaceController.openAndShowFile( file );
+			} );
+		}
 	}
 	
 	@FXML

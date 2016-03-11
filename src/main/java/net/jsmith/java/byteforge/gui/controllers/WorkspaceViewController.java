@@ -24,7 +24,7 @@ import net.jsmith.java.byteforge.workspace.Type;
 import net.jsmith.java.byteforge.workspace.Workspace;
 
 public class WorkspaceViewController implements Controller {
-
+	
 	private static final Logger LOG = LoggerFactory.getLogger( WorkspaceViewController.class );
 	
 	public static Node createView( Workspace workspace ) {
@@ -50,118 +50,122 @@ public class WorkspaceViewController implements Controller {
 		return this.workspace;
 	}
 	
-    public void openAndShowType( Type type ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ) );
-    	}
-        Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
-            ContainerViewController view = ContainerViewController.getController( t );
-            return view.getContainer( ) == type.getContainer( );
-        } ).findFirst( ).orElseThrow( ( ) -> {
-        	if( LOG.isWarnEnabled( ) ) {
-        		LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
-        	}
-            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getContainer( ).getName( ) );
-        } );
-        
-        this.containerTabs.getSelectionModel( ).select( tab );
-        ContainerViewController.getController( tab ).openAndShowType( type );
-    }
-    
-    public void openAndShowType( Type type, Reference reference ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Opening and showing type '{}' in container '{}' and seeking to reference '{}'.", type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), reference.toAnchorID( ) );
-    	}
-    	Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
-    		ContainerViewController view = ContainerViewController.getController( t );
-    		return view.getContainer( ) == type.getContainer( );
-    	} ).findFirst( ).orElseThrow( ( ) -> {
-    		if( LOG.isWarnEnabled( ) ) {
-        		LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
-        	}
-            return new IllegalArgumentException( "Unable to locate container view for container: " + type.getContainer( ).getName( ) );
-    	} );
-    	
-    	this.containerTabs.getSelectionModel( ).select( tab );
-    	ContainerViewController.getController( tab ).openAndShowType( type, reference );
-    }
-    
-    public void openAndShowFile( File file ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Opening and showing file '{}'.", file );
-    	}
-    	this.getWorkspace( ).openContainerAtPath( Paths.get( file.toURI( ) ) );
-    }
-    
-    private void addContainer( Container container ) {
-    	if( LOG.isInfoEnabled( ) ) {
-    		LOG.info( "Received container opened event for container '{}'.", container.getName( ) );
-    	}
-    	
-    	Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
-    		ContainerViewController view = ContainerViewController.getController( t );
-    		return view.getContainer( ) == container;
-    	} ).findFirst( ).orElseGet( ( ) -> {
-    		Tab t = ContainerViewController.createView( this, container );
-        	
-        	this.containerTabs.getTabs( ).add( t );
-        	return t;
-    	} );
-    	this.containerTabs.getSelectionModel( ).select( tab );
-    }
+	public void openAndShowType( Type type ) {
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ),
+					type.getContainer( ).getName( ) );
+		}
+		Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
+			ContainerViewController view = ContainerViewController.getController( t );
+			return view.getContainer( ) == type.getContainer( );
+		} ).findFirst( ).orElseThrow( ( ) -> {
+			if( LOG.isWarnEnabled( ) ) {
+				LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
+			}
+			return new IllegalArgumentException(
+					"Unable to locate container view for container: " + type.getContainer( ).getName( ) );
+		} );
+		
+		this.containerTabs.getSelectionModel( ).select( tab );
+		ContainerViewController.getController( tab ).openAndShowType( type );
+	}
+	
+	public void openAndShowType( Type type, Reference reference ) {
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Opening and showing type '{}' in container '{}' and seeking to reference '{}'.",
+					type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), reference.toAnchorID( ) );
+		}
+		Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
+			ContainerViewController view = ContainerViewController.getController( t );
+			return view.getContainer( ) == type.getContainer( );
+		} ).findFirst( ).orElseThrow( ( ) -> {
+			if( LOG.isWarnEnabled( ) ) {
+				LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
+			}
+			return new IllegalArgumentException(
+					"Unable to locate container view for container: " + type.getContainer( ).getName( ) );
+		} );
+		
+		this.containerTabs.getSelectionModel( ).select( tab );
+		ContainerViewController.getController( tab ).openAndShowType( type, reference );
+	}
+	
+	public void openAndShowFile( File file ) {
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Opening and showing file '{}'.", file );
+		}
+		this.getWorkspace( ).openContainerAtPath( Paths.get( file.toURI( ) ) );
+	}
+	
+	private void addContainer( Container container ) {
+		if( LOG.isInfoEnabled( ) ) {
+			LOG.info( "Received container opened event for container '{}'.", container.getName( ) );
+		}
+		
+		Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
+			ContainerViewController view = ContainerViewController.getController( t );
+			return view.getContainer( ) == container;
+		} ).findFirst( ).orElseGet( ( ) -> {
+			Tab t = ContainerViewController.createView( this, container );
+			
+			this.containerTabs.getTabs( ).add( t );
+			return t;
+		} );
+		this.containerTabs.getSelectionModel( ).select( tab );
+	}
 	
 	@FXML
 	private void initialize( ) {
 		this.containerTabs.getTabs( ).addListener( ( Change< ? extends Tab > c ) -> {
-        	while( c.next( ) ) {
-        		if( c.wasRemoved( ) ) {
-        			for( Tab removed : c.getRemoved( ) ) {
-        				ContainerViewController cv = ContainerViewController.getController( removed );
-        				cv.getContainer( ).close( );
-        			}
-        		}
-        	}
-        } );
-        
-        workspace.onError( ).register( ListenerUtils.onFXThread( ( err ) -> {
-        	ErrorDialog.displayError( "Error in workspace", "Error in workspace threads.", err );
-        } ) );
-        workspace.onContainerClosed( ).register( ListenerUtils.onFXThread( ( container ) -> {
-        	if( LOG.isInfoEnabled( ) ) {
-        		LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
-        	}
-        	this.containerTabs.getTabs( ).stream( ).filter( ( tab ) -> {
-        		return ContainerViewController.getController( tab ).getContainer( ) == container;
-        	} ).findFirst( ).ifPresent( ( tab ) -> {
-        		this.containerTabs.getTabs( ).remove( tab );
-        	} );
-        } ) );
-        workspace.onContainerOpened( ).register( ListenerUtils.onFXThread( this::addContainer ) );
-        workspace.getContainers( ).forEach( this::addContainer );
+			while( c.next( ) ) {
+				if( c.wasRemoved( ) ) {
+					for( Tab removed : c.getRemoved( ) ) {
+						ContainerViewController cv = ContainerViewController.getController( removed );
+						cv.getContainer( ).close( );
+					}
+				}
+			}
+		} );
+		
+		workspace.onError( ).register( ListenerUtils.onFXThread( ( err ) -> {
+			ErrorDialog.displayError( "Error in workspace", "Error in workspace threads.", err );
+		} ) );
+		workspace.onContainerClosed( ).register( ListenerUtils.onFXThread( ( container ) -> {
+			if( LOG.isInfoEnabled( ) ) {
+				LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
+			}
+			this.containerTabs.getTabs( ).stream( ).filter( ( tab ) -> {
+				return ContainerViewController.getController( tab ).getContainer( ) == container;
+			} ).findFirst( ).ifPresent( ( tab ) -> {
+				this.containerTabs.getTabs( ).remove( tab );
+			} );
+		} ) );
+		workspace.onContainerOpened( ).register( ListenerUtils.onFXThread( this::addContainer ) );
+		workspace.getContainers( ).forEach( this::addContainer );
 	}
 	
 	@FXML
 	private void onDragOver( DragEvent evt ) {
 		Dragboard db = evt.getDragboard( );
-        if( db.hasFiles( ) ) {
-            evt.consume( );
-            
-            evt.acceptTransferModes( TransferMode.ANY );
-        }
+		if( db.hasFiles( ) ) {
+			evt.consume( );
+			
+			evt.acceptTransferModes( TransferMode.ANY );
+		}
 	}
 	
 	@FXML
 	private void onDragDropped( DragEvent evt ) {
 		Dragboard db = evt.getDragboard( );
-        if( db.hasFiles( ) ) {
-            evt.consume( );
-        	List< File > files = db.getFiles( );
-        	if( LOG.isDebugEnabled( ) ) {
-        		LOG.debug( "File drop event captured for files '{}'.", files );
-        	}
-            
-            files.stream( ).forEach( this::openAndShowFile );
-        }
+		if( db.hasFiles( ) ) {
+			evt.consume( );
+			List< File > files = db.getFiles( );
+			if( LOG.isDebugEnabled( ) ) {
+				LOG.debug( "File drop event captured for files '{}'.", files );
+			}
+			
+			files.stream( ).forEach( this::openAndShowFile );
+		}
 	}
 	
 }
