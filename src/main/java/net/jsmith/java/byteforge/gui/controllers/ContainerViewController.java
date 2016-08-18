@@ -3,6 +3,7 @@ package net.jsmith.java.byteforge.gui.controllers;
 import java.util.Objects;
 
 import com.google.common.eventbus.Subscribe;
+import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
 import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +129,13 @@ public class ContainerViewController implements Controller {
 		}
 		this.contentTree.addType( type );
 	}
+
+	@Subscribe
+    private void onContainerClosed( ContainerClosedEvent event ) {
+	    if( event.getContainer( ) == this.container ) {
+	        this.getWorkspaceView( ).getEventBus( ).unregister( this );
+        }
+    }
 
 	@Subscribe
 	private void onTypeLoaded( TypeLoadEvent event ) {
