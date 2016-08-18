@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +24,9 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 	
 	private final List< Type > loadedTypes = new ArrayList< >( );
 	
-	private final BroadcastListener< Type > onTypeLoaded;
-	
 	protected AbstractContainer( String name, WorkspaceImpl workspace ) {
 		this.name = Objects.requireNonNull( name, "name" );
 		this.workspace = Objects.requireNonNull( workspace, "workspace" );
-		
-		this.onTypeLoaded = new BroadcastListener< >( );
 		
 		this.workspace.incReference( );
 	}
@@ -66,11 +63,6 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 			}
 		} );
 	}
-	
-	@Override
-	public BroadcastListener< Type > onTypeLoaded( ) {
-		return this.onTypeLoaded;
-	}
 
 	protected final void loadType( String typeName ) {
 		if( LOG.isDebugEnabled( ) ) {
@@ -97,7 +89,7 @@ public abstract class AbstractContainer extends Referenceable implements Contain
 		synchronized( this.loadedTypes ) {
 			this.loadedTypes.add( result );
 		}
-		this.onTypeLoaded.on( result );
+		this.getWorkspace( ).getEventBus( ).post( new TypeLoadEvent( result ) );
 	}
 	
 	protected void implClose( ) {

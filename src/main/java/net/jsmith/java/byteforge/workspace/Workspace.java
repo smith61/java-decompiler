@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.common.eventbus.EventBus;
 import net.jsmith.java.byteforge.listener.BroadcastListener;
 
 public interface Workspace {
@@ -18,8 +19,5 @@ public interface Workspace {
 	
 	CompletableFuture< List< Type > > resolveReference( Reference reference );
 	
-	BroadcastListener< Container > onContainerOpened( );
-	BroadcastListener< Container > onContainerClosed( );
-	BroadcastListener< Throwable > onError( );
-	
+	EventBus getEventBus( );
 }

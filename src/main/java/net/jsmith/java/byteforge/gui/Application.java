@@ -1,5 +1,6 @@
 package net.jsmith.java.byteforge.gui;
 
+import com.google.common.eventbus.AsyncEventBus;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuBar;
@@ -8,6 +9,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import net.jsmith.java.byteforge.gui.controllers.ApplicationMenuController;
 import net.jsmith.java.byteforge.gui.controllers.WorkspaceViewController;
+import net.jsmith.java.byteforge.utils.ThreadPools;
 import net.jsmith.java.byteforge.workspace.Workspace;
 import net.jsmith.java.byteforge.workspace.impl.WorkspaceImpl;
 
@@ -20,7 +22,7 @@ public class Application extends javafx.application.Application {
 	private final Workspace defaultWorkspace;
 	
 	public Application( ) {
-		this.defaultWorkspace = new WorkspaceImpl( "default" );
+		this.defaultWorkspace = new WorkspaceImpl( "default", new AsyncEventBus( ThreadPools.PLATFORM ) );
 	}
 	
 	@Override

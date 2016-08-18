@@ -5,6 +5,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.eventbus.Subscribe;
+import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
+import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
+import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +21,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import net.jsmith.java.byteforge.gui.ErrorDialog;
-import net.jsmith.java.byteforge.gui.ListenerUtils;
 import net.jsmith.java.byteforge.workspace.Container;
 import net.jsmith.java.byteforge.workspace.Reference;
 import net.jsmith.java.byteforge.workspace.Type;
@@ -55,17 +58,7 @@ public class WorkspaceViewController implements Controller {
 			LOG.info( "Opening and showing type '{}' in container '{}'.", type.getMetadata( ).getFullName( ),
 					type.getContainer( ).getName( ) );
 		}
-		Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
-			ContainerViewController view = ContainerViewController.getController( t );
-			return view.getContainer( ) == type.getContainer( );
-		} ).findFirst( ).orElseThrow( ( ) -> {
-			if( LOG.isWarnEnabled( ) ) {
-				LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
-			}
-			return new IllegalArgumentException(
-					"Unable to locate container view for container: " + type.getContainer( ).getName( ) );
-		} );
-		
+		Tab tab = this.getTabForContainer( type.getContainer( ) );
 		this.containerTabs.getSelectionModel( ).select( tab );
 		ContainerViewController.getController( tab ).openAndShowType( type );
 	}
@@ -75,17 +68,7 @@ public class WorkspaceViewController implements Controller {
 			LOG.info( "Opening and showing type '{}' in container '{}' and seeking to reference '{}'.",
 					type.getMetadata( ).getFullName( ), type.getContainer( ).getName( ), reference.toAnchorID( ) );
 		}
-		Tab tab = this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
-			ContainerViewController view = ContainerViewController.getController( t );
-			return view.getContainer( ) == type.getContainer( );
-		} ).findFirst( ).orElseThrow( ( ) -> {
-			if( LOG.isWarnEnabled( ) ) {
-				LOG.warn( "Could not find container window for container '{}'.", type.getContainer( ).getName( ) );
-			}
-			return new IllegalArgumentException(
-					"Unable to locate container view for container: " + type.getContainer( ).getName( ) );
-		} );
-		
+		Tab tab = this.getTabForContainer( type.getContainer( ) );
 		this.containerTabs.getSelectionModel( ).select( tab );
 		ContainerViewController.getController( tab ).openAndShowType( type, reference );
 	}
@@ -113,6 +96,42 @@ public class WorkspaceViewController implements Controller {
 		} );
 		this.containerTabs.getSelectionModel( ).select( tab );
 	}
+
+	private Tab getTabForContainer( Container container ) {
+	    return this.containerTabs.getTabs( ).stream( ).filter( ( t ) -> {
+	        ContainerViewController view = ContainerViewController.getController( t );
+            return view.getContainer( ) == container;
+        } ).findFirst( ).orElseThrow( ( ) -> {
+            if( LOG.isWarnEnabled( ) ) {
+                LOG.warn( "Could not find container window for container '{}'.", container.getName( ) );
+            }
+            return new IllegalArgumentException(
+                    "Unable to locate container view for container: " + container.getName( ) );
+        } );
+    }
+
+    @Subscribe
+    private void onWorkspaceError( WorkspaceErrorEvent event ) {
+        ErrorDialog.displayError( "Error in workspace.", "Error in workspace threads.", event.getError( ) );
+    }
+
+    @Subscribe
+    private void onContainerOpened( ContainerOpenedEvent event ) {
+        this.addContainer( event.getContainer( ) );
+    }
+
+    @Subscribe
+    private void onContainerClosed( ContainerClosedEvent event ) {
+        Container container = event.getContainer( );
+        if( LOG.isInfoEnabled( ) ) {
+            LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
+        }
+        this.containerTabs.getTabs( ).stream( ).filter( ( tab ) -> {
+            return ContainerViewController.getController( tab ).getContainer( ) == container;
+        } ).findFirst( ).ifPresent( ( tab ) -> {
+            this.containerTabs.getTabs( ).remove( tab );
+        } );
+    }
 	
 	@FXML
 	private void initialize( ) {
@@ -126,21 +145,8 @@ public class WorkspaceViewController implements Controller {
 				}
 			}
 		} );
-		
-		workspace.onError( ).register( ListenerUtils.onFXThread( ( err ) -> {
-			ErrorDialog.displayError( "Error in workspace", "Error in workspace threads.", err );
-		} ) );
-		workspace.onContainerClosed( ).register( ListenerUtils.onFXThread( ( container ) -> {
-			if( LOG.isInfoEnabled( ) ) {
-				LOG.info( "Received container closed event for container '{}'.", container.getName( ) );
-			}
-			this.containerTabs.getTabs( ).stream( ).filter( ( tab ) -> {
-				return ContainerViewController.getController( tab ).getContainer( ) == container;
-			} ).findFirst( ).ifPresent( ( tab ) -> {
-				this.containerTabs.getTabs( ).remove( tab );
-			} );
-		} ) );
-		workspace.onContainerOpened( ).register( ListenerUtils.onFXThread( this::addContainer ) );
+
+        workspace.getEventBus( ).register( this );
 		workspace.getContainers( ).forEach( this::addContainer );
 	}
 	

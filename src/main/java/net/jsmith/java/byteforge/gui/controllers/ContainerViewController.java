@@ -2,6 +2,8 @@ package net.jsmith.java.byteforge.gui.controllers;
 
 import java.util.Objects;
 
+import com.google.common.eventbus.Subscribe;
+import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,6 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import net.jsmith.java.byteforge.gui.ListenerUtils;
 import net.jsmith.java.byteforge.gui.controls.TypeTreeItem;
 import net.jsmith.java.byteforge.gui.controls.TypeTreeView;
 import net.jsmith.java.byteforge.utils.TypeNameUtils;
@@ -127,10 +128,18 @@ public class ContainerViewController implements Controller {
 		}
 		this.contentTree.addType( type );
 	}
+
+	@Subscribe
+	private void onTypeLoaded( TypeLoadEvent event ) {
+		Type type = event.getType( );
+		if( type.getContainer( ) == this.container ) {
+			this.addType( type );
+		}
+	}
 	
 	@FXML
 	private void initialize( ) {
-		this.container.onTypeLoaded( ).register( ListenerUtils.onFXThread( this::addType ) );
+		this.container.getWorkspace( ).getEventBus( ).register( this );
 		this.container.getContainedTypes( ).forEach( this::addType );
 	}
 	

@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.common.eventbus.EventBus;
+import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
+import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
+import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,20 +30,20 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	
 	private final String name;
 	private final List< AbstractContainer > containers;
-	
-	private final BroadcastListener< Container > onContainerOpened;
-	private final BroadcastListener< Container > onContainerClosed;
-	private final BroadcastListener< Throwable > onError;
+
+	private final EventBus eventBus;
 	
 	public WorkspaceImpl( String name ) {
-		this.name = Objects.requireNonNull( name, "name" );
-		
-		this.containers = new ArrayList< >( );
-		
-		this.onContainerOpened = new BroadcastListener< >( );
-		this.onContainerClosed = new BroadcastListener< >( );
-		this.onError = new BroadcastListener< >( );
+		this( name, new EventBus( ) );
 	}
+
+	public WorkspaceImpl( String name, EventBus eventBus ) {
+	    this.name = Objects.requireNonNull( name, "name" );
+
+        this.containers = new ArrayList< >( );
+
+        this.eventBus = Objects.requireNonNull( eventBus, "eventBus" );
+    }
 	
 	@Override
 	public String getName( ) {
@@ -70,7 +74,7 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 				synchronized( this.containers ) {
 					this.containers.add( container );
 				}
-				this.onContainerOpened.on( container );
+				this.getEventBus( ).post( new ContainerOpenedEvent( container ) );
 			}
 			catch( Throwable err ) {
 				if( LOG.isErrorEnabled( ) ) {
@@ -99,31 +103,21 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 			return new ReferenceResolver( this, reference ).resolve( );
 		} );
 	}
-	
-	@Override
-	public BroadcastListener< Container > onContainerOpened( ) {
-		return this.onContainerOpened;
-	}
 
 	@Override
-	public BroadcastListener< Container > onContainerClosed( ) {
-		return this.onContainerClosed;
-	}
-
-	@Override
-	public BroadcastListener< Throwable > onError( ) {
-		return this.onError;
-	}
+    public EventBus getEventBus( ) {
+	    return this.eventBus;
+    }
 
 	protected final void onError( Throwable t ) {
-		this.onError.on( t );
+		this.getEventBus( ).post( new WorkspaceErrorEvent( this, t ) );
 	}
 	
 	protected final void removeContainer( AbstractContainer container ) {
 		synchronized( this.containers ) {
 			this.containers.remove( container );
 		}
-		this.onContainerClosed.on( container );
+		this.getEventBus( ).post( new ContainerClosedEvent( container ) );
 	}
 
 	protected void implClose( ) {

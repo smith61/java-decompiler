@@ -16,6 +16,4 @@ public interface Container {
 	
 	void close( );
 	
-	BroadcastListener< Type > onTypeLoaded( );
-	
 }

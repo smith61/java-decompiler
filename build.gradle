@@ -19,7 +19,8 @@ dependencies {
 	compile 'org.slf4j:slf4j-api:1.7.16'
 	compile 'ch.qos.logback:logback-core:1.1.5'
 	compile 'ch.qos.logback:logback-classic:1.1.5'
-	compile 'org.rendersnake:rendersnake:1.9.0' 
+	compile 'org.rendersnake:rendersnake:1.9.0'
+	compile 'com.google.guava:guava:19.0'
 }
 repositories {
 	mavenCentral( )
