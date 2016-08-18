@@ -139,7 +139,7 @@ public class ContainerViewController implements Controller {
 	
 	@FXML
 	private void initialize( ) {
-		this.container.getWorkspace( ).getEventBus( ).register( this );
+	    this.getWorkspaceView( ).getEventBus( ).register( this );
 		this.container.getContainedTypes( ).forEach( this::addType );
 	}
 	

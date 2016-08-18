@@ -5,7 +5,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import net.jsmith.java.byteforge.utils.EventRelay;
+import net.jsmith.java.byteforge.utils.ThreadPools;
 import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
 import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
 import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
@@ -41,17 +44,27 @@ public class WorkspaceViewController implements Controller {
 	}
 	
 	private final Workspace workspace;
+
+    private final EventBus eventBus;
+    private final EventRelay eventRelay;
 	
 	@FXML
 	private TabPane containerTabs;
 	
 	private WorkspaceViewController( Workspace workspace ) {
 		this.workspace = Objects.requireNonNull( workspace, "workspace" );
+
+        this.eventBus = new EventBus( );
+        this.eventRelay = new EventRelay( this.eventBus, ThreadPools.PLATFORM );
 	}
 	
 	public Workspace getWorkspace( ) {
 		return this.workspace;
 	}
+
+	public EventBus getEventBus( ) {
+	    return this.eventBus;
+    }
 	
 	public void openAndShowType( Type type ) {
 		if( LOG.isInfoEnabled( ) ) {
@@ -146,7 +159,9 @@ public class WorkspaceViewController implements Controller {
 			}
 		} );
 
-        workspace.getEventBus( ).register( this );
+        this.eventBus.register( this );
+
+        workspace.getEventBus( ).register( this.eventRelay );
 		workspace.getContainers( ).forEach( this::addContainer );
 	}
 	
