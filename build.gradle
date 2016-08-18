@@ -4,7 +4,7 @@ apply plugin: 'application'
 apply plugin: 'eclipse'
 
 mainClassName = 'net.jsmith.java.byteforge.gui.Application'
-version = '1.0.0'
+version = '1.1.0'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
