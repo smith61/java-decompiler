@@ -10,7 +10,6 @@ import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.jsmith.java.byteforge.listener.BroadcastListener;
 import net.jsmith.java.byteforge.utils.IOUtils;
 import net.jsmith.java.byteforge.workspace.Container;
 import net.jsmith.java.byteforge.workspace.Type;
