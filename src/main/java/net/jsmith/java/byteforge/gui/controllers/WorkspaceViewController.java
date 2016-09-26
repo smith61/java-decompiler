@@ -5,15 +5,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import net.jsmith.java.byteforge.utils.EventRelay;
-import net.jsmith.java.byteforge.utils.ThreadPools;
-import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
-import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
-import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import javafx.collections.ListChangeListener.Change;
 import javafx.fxml.FXML;
@@ -24,10 +20,16 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import net.jsmith.java.byteforge.gui.ErrorDialog;
+import net.jsmith.java.byteforge.utils.EventRelay;
+import net.jsmith.java.byteforge.utils.ThreadPools;
 import net.jsmith.java.byteforge.workspace.Container;
 import net.jsmith.java.byteforge.workspace.Reference;
 import net.jsmith.java.byteforge.workspace.Type;
 import net.jsmith.java.byteforge.workspace.Workspace;
+import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
+import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
+import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
+import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
 
 public class WorkspaceViewController implements Controller {
 	
@@ -144,6 +146,17 @@ public class WorkspaceViewController implements Controller {
         } ).findFirst( ).ifPresent( ( tab ) -> {
             this.containerTabs.getTabs( ).remove( tab );
         } );
+    }
+    
+    @Subscribe
+    private void onTypeLoaded( TypeLoadEvent event ) {
+    	this.containerTabs.getTabs( ).stream( ).map( ( tab ) -> {
+    		return ContainerViewController.getController( tab );
+    	} ).filter( ( controller ) -> {
+    		return event.getContainer( ) == controller.getContainer( );
+    	} ).findFirst( ).ifPresent( ( controller ) -> {
+    		controller.addType( event.getType( ) );
+    	} );
     }
 	
 	@FXML

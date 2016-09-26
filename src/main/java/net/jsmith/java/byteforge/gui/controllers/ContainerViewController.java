@@ -2,9 +2,6 @@ package net.jsmith.java.byteforge.gui.controllers;
 
 import java.util.Objects;
 
-import com.google.common.eventbus.Subscribe;
-import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
-import net.jsmith.java.byteforge.workspace.events.TypeLoadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +95,22 @@ public class ContainerViewController implements Controller {
 		TypeViewController.getController( tab ).seekToReference( reference );
 	}
 	
+	void addType( Type type ) {
+		Metadata metadata = type.getMetadata( );
+		if( LOG.isTraceEnabled( ) ) {
+			LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", metadata.getFullName( ),
+					type.getContainer( ).getName( ) );
+		}
+		if( metadata.getEnclosingType( ) != null ) {
+			if( LOG.isTraceEnabled( ) ) {
+				LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", metadata.getFullName( ),
+						type.getContainer( ).getName( ) );
+			}
+			return;
+		}
+		this.contentTree.addType( type );
+	}
+	
 	private Type findOutermostType( Type actType ) {
 		Type type = actType;
 		while( true ) {
@@ -114,40 +127,8 @@ public class ContainerViewController implements Controller {
 		return type;
 	}
 	
-	private void addType( Type type ) {
-		Metadata metadata = type.getMetadata( );
-		if( LOG.isTraceEnabled( ) ) {
-			LOG.trace( "Recieved type loaded event for type '{}' from container '{}'.", metadata.getFullName( ),
-					type.getContainer( ).getName( ) );
-		}
-		if( metadata.getEnclosingType( ) != null ) {
-			if( LOG.isTraceEnabled( ) ) {
-				LOG.trace( "Ignoring anonymous inner class '{}' in container '{}'.", metadata.getFullName( ),
-						type.getContainer( ).getName( ) );
-			}
-			return;
-		}
-		this.contentTree.addType( type );
-	}
-
-	@Subscribe
-    private void onContainerClosed( ContainerClosedEvent event ) {
-	    if( event.getContainer( ) == this.container ) {
-	        this.getWorkspaceView( ).getEventBus( ).unregister( this );
-        }
-    }
-
-	@Subscribe
-	private void onTypeLoaded( TypeLoadEvent event ) {
-		Type type = event.getType( );
-		if( type.getContainer( ) == this.container ) {
-			this.addType( type );
-		}
-	}
-	
 	@FXML
 	private void initialize( ) {
-	    this.getWorkspaceView( ).getEventBus( ).register( this );
 		this.container.getContainedTypes( ).forEach( this::addType );
 	}
 	
