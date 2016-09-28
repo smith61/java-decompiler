@@ -50,6 +50,9 @@ public class ContainerViewController implements Controller {
 	@FXML
 	private TabPane typeTabs;
 	
+	private TypeViewController typeViewController;
+	private Node typeViewNode;
+	
 	private ContainerViewController( WorkspaceViewController workspaceView, Container container ) {
 		this.workspaceView = Objects.requireNonNull( workspaceView, "workspaceView" );
 		this.container = Objects.requireNonNull( container, "container" );
@@ -83,16 +86,18 @@ public class ContainerViewController implements Controller {
 		
 		Type outerType = this.findOutermostType( type );
 		Tab tab = this.typeTabs.getTabs( ).stream( ).filter( ( t ) -> {
-			return Objects.equals( outerType, TypeViewController.getController( t ).getType( ) );
+			return Objects.equals( outerType, ( ( TypeViewState ) t.getUserData( ) ).getType( ) );
 		} ).findFirst( ).orElseGet( ( ) -> {
-			Tab t = TypeViewController.createView( this, outerType );
+			Tab t = new Tab( outerType.getMetadata( ).getTypeName( ) );
+			t.setUserData( new TypeViewState( outerType ) );
 			
 			typeTabs.getTabs( ).add( t );
+			
 			return t;
 		} );
-		
+
 		this.typeTabs.getSelectionModel( ).select( tab );
-		TypeViewController.getController( tab ).seekToReference( reference );
+		this.typeViewController.seekToReference( reference );
 	}
 	
 	void addType( Type type ) {
@@ -130,6 +135,23 @@ public class ContainerViewController implements Controller {
 	@FXML
 	private void initialize( ) {
 		this.container.getContainedTypes( ).forEach( this::addType );
+		
+		this.typeViewNode = TypeViewController.createView( this );
+		this.typeViewController = FXMLUtils.getController( this.typeViewNode );
+		
+		this.typeTabs.getSelectionModel( ).selectedItemProperty( ).addListener( ( obs, pVal, nVal ) -> {
+			if( pVal != null ) {
+				pVal.setContent( null );
+			}
+			
+			if( nVal == null ) {
+				this.typeViewController.setCurrentViewState( null );
+			}
+			else {
+				nVal.setContent( this.typeViewNode );
+				this.typeViewController.setCurrentViewState( ( TypeViewState ) nVal.getUserData( ) );
+			}
+		} );
 	}
 	
 	@FXML

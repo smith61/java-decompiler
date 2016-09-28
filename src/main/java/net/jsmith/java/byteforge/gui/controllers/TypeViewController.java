@@ -10,8 +10,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.events.EventTarget;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -19,7 +20,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebErrorEvent;
 import javafx.scene.web.WebView;
-import net.jsmith.java.byteforge.decompiler.DecompilerUtils;
 import net.jsmith.java.byteforge.gui.ErrorDialog;
 import net.jsmith.java.byteforge.utils.IOUtils;
 import net.jsmith.java.byteforge.utils.ThreadPools;
@@ -27,80 +27,92 @@ import net.jsmith.java.byteforge.utils.XMLStreamSupport;
 import net.jsmith.java.byteforge.workspace.FieldReference;
 import net.jsmith.java.byteforge.workspace.MethodReference;
 import net.jsmith.java.byteforge.workspace.Reference;
-import net.jsmith.java.byteforge.workspace.Type;
 import net.jsmith.java.byteforge.workspace.TypeReference;
 import net.jsmith.java.byteforge.workspace.Workspace;
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
-public class TypeViewController implements Controller {
+public class TypeViewController implements Controller, ChangeListener< Boolean > {
 	
 	private static final Logger LOG = LoggerFactory.getLogger( TypeViewController.class );
 	
-	public static Tab createView( ContainerViewController containerView, Type type ) {
-		TypeViewController controller = new TypeViewController( containerView, type );
+	public static javafx.scene.Node createView( ContainerViewController containerView) {
+		TypeViewController controller = new TypeViewController( containerView );
 		
-		Tab tab = new Tab( type.getMetadata( ).getTypeName( ) );
-		tab.setContent( FXMLUtils.loadView( "TypeView.fxml", controller ) );
-		
-		return tab;
-	}
-	
-	public static TypeViewController getController( Tab tab ) {
-		return FXMLUtils.getController( tab.getContent( ) );
+		return FXMLUtils.loadView( "TypeView.fxml", controller );
 	}
 	
 	private final ContainerViewController containerView;
-	private final Type type;
 	
-	private boolean isDecompiled;
-	private Runnable onDecompiled;
+	private TypeViewState currentViewState;
 	
 	@FXML
 	private WebView contentView;
 	
 	@FXML
 	private GridPane searchBar;
+	
 	@FXML
 	private TextField searchText;
 	
-	private TypeViewController( ContainerViewController containerView, Type type ) {
+	private TypeViewController( ContainerViewController containerView) {
 		this.containerView = Objects.requireNonNull( containerView, "containerView" );
-		this.type = Objects.requireNonNull( type, "type" );
-		
-		this.isDecompiled = false;
-		this.onDecompiled = null;
-	}
-	
-	public Type getType( ) {
-		return this.type;
-	}
-	
-	public void addOnDecompile( Runnable r ) {
-		if( this.isDecompiled ) {
-			r.run( );
-		}
-		else if( this.onDecompiled == null ) {
-			this.onDecompiled = r;
-		}
-		else {
-			Runnable prev = this.onDecompiled;
-			this.onDecompiled = ( ) -> {
-				prev.run( );
-				r.run( );
-			};
-		}
 	}
 	
 	public void seekToReference( Reference reference ) {
-		this.addOnDecompile( ( ) -> {
-			String anchorID = reference.toAnchorID( );
-			Node element = this.contentView.getEngine( ).getDocument( ).getElementById( anchorID );
-			if( element == null ) {
-				return;
+		if( !this.trySeek( reference ) ) {
+			this.currentViewState.setSeekReference( reference );
+		}
+		else {
+			this.currentViewState.setSeekReference( null );
+		}
+	}
+	
+	public TypeViewState getCurrentViewState( ) {
+		return this.currentViewState;
+	}
+	
+	public void setCurrentViewState( TypeViewState nState ) {
+		if( this.currentViewState == nState ) {
+			return;
+		}
+		
+		if( LOG.isTraceEnabled( ) ) {
+			String fromTypeName = "NONE";
+			String toTypeName = "NONE";
+			if( this.currentViewState != null ) {
+				fromTypeName = this.currentViewState.getType( ).getMetadata( ).getFullName( );
 			}
-			( ( JSObject ) element ).call( "scrollIntoView", true );
-		} );
+			if( nState != null ) {
+				toTypeName = nState.getType( ).getMetadata( ).getFullName( );
+			}
+			
+			LOG.trace( "Switching type view from type '{}' to type '{}' in container '{}'.",
+					fromTypeName, toTypeName, this.containerView.getContainer( ).getName( ) );
+		}
+		
+		if( this.currentViewState != null ) {
+			this.currentViewState.getIsDecompiledProperty( ).removeListener( this );
+			if( this.isSearchBarVisible( ) ) {
+				this.updateSearch( "" );
+			}
+			
+			Document document = this.contentView.getEngine( ).getDocument( );
+			if( document != null ) {
+				JSObject asJS = ( JSObject ) document;
+				this.currentViewState.setSeekLocation( ( Integer ) asJS.eval( "window.pageYOffset" ) );
+			}
+			else {
+				this.currentViewState.setSeekLocation( 0 );
+			}
+		}
+		
+		this.currentViewState = nState;
+		
+		if( this.currentViewState != null ) {
+			this.contentView.getEngine( ).loadContent( this.currentViewState.getDecompiledContent( ) );
+			this.currentViewState.getIsDecompiledProperty( ).addListener( this );
+		}
 	}
 	
 	public void setSearchBarVisible( boolean visible ) {
@@ -122,8 +134,7 @@ public class TypeViewController implements Controller {
 	@FXML
 	private void initialize( ) {
 		if( LOG.isInfoEnabled( ) ) {
-			LOG.info( "Initializing TypeViewController for type '{}' of container '{}'.",
-					this.type.getMetadata( ).getFullName( ), this.type.getContainer( ).getName( ) );
+			LOG.info( "Initializing TypeViewController for container '{}'.", this.containerView.getContainer( ).getName( ) );
 		}
 		
 		// Disable drag and drop for WebView
@@ -134,6 +145,25 @@ public class TypeViewController implements Controller {
 		this.contentView.setOnDragDetected( null );
 		this.contentView.setOnDragDone( null );
 		this.contentView.getEngine( ).setOnError( this::onJavascriptError );
+		this.contentView.getEngine( ).documentProperty( ).addListener( ( obs, pVal, nVal ) -> {
+			if( nVal == null ) return;
+			
+			this.loadScripts( );
+			this.loadLineStylesheet( nVal );
+			this.registerEventHandlers( nVal );
+			
+			if( this.isSearchBarVisible( ) ) {
+				this.updateSearch( this.searchText.getText( ) );
+			}
+			
+			if( this.currentViewState.getSeekReference( ) != null ) {
+				this.seekToReference( this.currentViewState.getSeekReference( ) );
+			}
+			else {
+				JSObject asJS = ( JSObject ) nVal;
+				asJS.eval( String.format( "window.scrollTo(0, %d)", this.currentViewState.getSeekLocation( ) ) );
+			}
+		} );
 		
 		this.searchBar.setVisible( false );
 		this.searchBar.setManaged( false );
@@ -143,38 +173,6 @@ public class TypeViewController implements Controller {
 		
 		WebEngine engine = this.contentView.getEngine( );
 		engine.setUserStyleSheetLocation( this.getClass( ).getResource( "/css/type.css" ).toExternalForm( ) );
-		
-		String loadingMessage = String.format( "Decompiling '%s'...", this.type.getMetadata( ).getFullName( ) );
-		engine.loadContent( loadingMessage, "text/plain" );
-		
-		if( LOG.isInfoEnabled( ) ) {
-			LOG.info( "Decompiling type '{}' of container '{}'.", this.type.getMetadata( ).getFullName( ),
-					this.type.getContainer( ).getName( ) );
-		}
-		DecompilerUtils.defaultDecompile( this.type ).whenCompleteAsync( ( html, err ) -> {
-			if( err != null ) {
-				if( LOG.isErrorEnabled( ) ) {
-					LOG.error( "Error decompiling '{}' of container '{}'.", type.getMetadata( ).getFullName( ),
-							type.getContainer( ).getName( ), err );
-				}
-				ErrorDialog.displayError( "Error decompiling type",
-						"Error decompiling type: " + type.getMetadata( ).getFullName( ), err );
-			}
-			else {
-				if( LOG.isInfoEnabled( ) ) {
-					LOG.info( "Received type html for '{}' of container '{}'.", type.getMetadata( ).getFullName( ),
-							type.getContainer( ).getName( ) );
-				}
-				engine.documentProperty( ).addListener( ( obs, oldVal, newVal ) -> {
-					if( newVal != null ) {
-						this.loadScripts( );
-						this.registerEventHandlers( newVal );
-						this.loadLineStylesheet( newVal );
-					}
-				} );
-				engine.loadContent( html );
-			}
-		}, ThreadPools.PLATFORM );
 	}
 	
 	@FXML
@@ -212,12 +210,6 @@ public class TypeViewController implements Controller {
 				this.handleReferenceClick( reference );
 			}, true );
 		} );
-		
-		this.isDecompiled = true;
-		if( this.onDecompiled != null ) {
-			this.onDecompiled.run( );
-			this.onDecompiled = null;
-		}
 	}
 	
 	private void loadScripts( ) {
@@ -313,6 +305,25 @@ public class TypeViewController implements Controller {
 		}, ThreadPools.PLATFORM );
 	}
 	
+	private boolean trySeek( Reference reference ) {
+		if( !this.currentViewState.getIsDecompiled( ) ) {
+			return false;
+		}
+		
+		Document document = this.contentView.getEngine( ).getDocument( );
+		if( document == null ) {
+			return false;
+		}
+		
+		Node element = document.getElementById( reference.toAnchorID( ) );
+		if( element == null ) {
+			return false;
+		}
+		
+		( ( JSObject ) element ).call( "scrollIntoView", true );
+		return true;
+	}
+	
 	private void updateSearch( String text ) {
 		JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
 		root.call( "update_search", text );
@@ -328,6 +339,11 @@ public class TypeViewController implements Controller {
 	private void prevMatch( ) {
 		JSObject root = ( JSObject ) this.contentView.getEngine( ).getDocument( );
 		root.call( "prev_match" );
+	}
+
+	@Override
+	public void changed( ObservableValue< ? extends Boolean > observable, Boolean oldValue, Boolean newValue ) {
+		this.contentView.getEngine( ).loadContent( this.currentViewState.getDecompiledContent( ) );
 	}
 	
 }
