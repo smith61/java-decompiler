@@ -3,6 +3,12 @@ package net.jsmith.java.byteforge.gui.controllers;
 import java.io.IOException;
 import java.util.Objects;
 
+import net.jsmith.java.byteforge.workspace.FieldReference;
+import net.jsmith.java.byteforge.workspace.MethodReference;
+import net.jsmith.java.byteforge.workspace.Reference;
+import net.jsmith.java.byteforge.workspace.TypeReference;
+import net.jsmith.java.byteforge.workspace.Workspace;
+import net.jsmith.java.byteforge.workspace.WorkspaceIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -24,11 +30,6 @@ import net.jsmith.java.byteforge.gui.ErrorDialog;
 import net.jsmith.java.byteforge.utils.IOUtils;
 import net.jsmith.java.byteforge.utils.ThreadPools;
 import net.jsmith.java.byteforge.utils.XMLStreamSupport;
-import net.jsmith.java.byteforge.workspace.FieldReference;
-import net.jsmith.java.byteforge.workspace.MethodReference;
-import net.jsmith.java.byteforge.workspace.Reference;
-import net.jsmith.java.byteforge.workspace.TypeReference;
-import net.jsmith.java.byteforge.workspace.Workspace;
 import netscape.javascript.JSException;
 import netscape.javascript.JSObject;
 
@@ -285,7 +286,7 @@ public class TypeViewController implements Controller, ChangeListener< Boolean >
 		
 		WorkspaceViewController workspaceView = this.containerView.getWorkspaceView( );
 		Workspace workspace = workspaceView.getWorkspace( );
-		workspace.resolveReference( reference ).whenCompleteAsync( ( types, err ) -> {
+		workspace.getWorkspaceIndex( ).resolveReference( reference, WorkspaceIndex.RESOLVE_EXACT ).whenCompleteAsync( (types, err ) -> {
 			if( err != null ) {
 				if( LOG.isErrorEnabled( ) ) {
 					LOG.error( "Error resolving reference '{}'.", reference.toAnchorID( ), err );

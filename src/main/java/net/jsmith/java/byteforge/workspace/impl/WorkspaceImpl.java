@@ -9,19 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 import com.google.common.eventbus.EventBus;
+import net.jsmith.java.byteforge.workspace.*;
 import net.jsmith.java.byteforge.workspace.events.ContainerClosedEvent;
 import net.jsmith.java.byteforge.workspace.events.ContainerOpenedEvent;
 import net.jsmith.java.byteforge.workspace.events.WorkspaceErrorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.jsmith.java.byteforge.workspace.Container;
-import net.jsmith.java.byteforge.workspace.Reference;
-import net.jsmith.java.byteforge.workspace.Type;
-import net.jsmith.java.byteforge.workspace.Workspace;
 
 public class WorkspaceImpl extends Referenceable implements Workspace {
 	
@@ -31,6 +26,8 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 	private final List< AbstractContainer > containers;
 
 	private final EventBus eventBus;
+
+	private final WorkspaceIndexImpl workspaceIndex;
 	
 	public WorkspaceImpl( String name ) {
 		this( name, new EventBus( ) );
@@ -42,6 +39,8 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
         this.containers = new ArrayList< >( );
 
         this.eventBus = Objects.requireNonNull( eventBus, "eventBus" );
+
+        this.workspaceIndex = new WorkspaceIndexImpl( this );
     }
 	
 	@Override
@@ -95,12 +94,10 @@ public class WorkspaceImpl extends Referenceable implements Workspace {
 			container.close( );
 		}
 	}
-	
+
 	@Override
-	public CompletableFuture< List< Type > > resolveReference( Reference reference ) {
-		return this.withReferenceAsync( ( ) -> {
-			return new ReferenceResolver( this, reference ).resolve( );
-		} );
+	public WorkspaceIndex getWorkspaceIndex( ) {
+		return this.workspaceIndex;
 	}
 
 	@Override
