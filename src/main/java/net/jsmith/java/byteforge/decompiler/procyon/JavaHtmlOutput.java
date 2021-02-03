@@ -3,9 +3,6 @@ package net.jsmith.java.byteforge.decompiler.procyon;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.rendersnake.HtmlAttributes;
-import org.rendersnake.HtmlCanvas;
-
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -20,6 +17,8 @@ import com.strobel.assembler.metadata.VariableReference;
 import com.strobel.decompiler.ITextOutput;
 
 import net.jsmith.java.byteforge.decompiler.CSS;
+import net.jsmith.java.byteforge.decompiler.HtmlAttributes;
+import net.jsmith.java.byteforge.decompiler.HtmlCanvas;
 import net.jsmith.java.byteforge.decompiler.HtmlRenderer;
 
 public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
@@ -160,19 +159,28 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 			TypeDefinition def = ( TypeDefinition ) definition;
 			
 			String id = String.format( "type:%s", def.getInternalName( ) );
-			this.writeStyled( text, class_( CSS.JAVA_DEF_TYPE ).id( id ) );
+			HtmlAttributes attributes = new HtmlAttributes();
+			attributes.add("class", CSS.JAVA_DEF_TYPE);
+			attributes.add("id", id);
+			this.writeStyled(text, attributes);
 		}
 		else if( definition instanceof MethodDefinition ) {
 			MethodDefinition def = ( MethodDefinition ) definition;
 			
 			String id = String.format( "method:%s:%s:%s", def.getDeclaringType( ).getInternalName( ), def.getName( ), def.getSignature( ) );
-			this.writeStyled( text, class_( CSS.JAVA_DEF_METHOD ).id( id ) );
+			HtmlAttributes attributes = new HtmlAttributes();
+			attributes.add("class", CSS.JAVA_DEF_TYPE);
+			attributes.add("id", id);
+			this.writeStyled(text, attributes);
 		}
 		else if( definition instanceof FieldDefinition ) {
 			FieldDefinition def = ( FieldDefinition ) definition;
 			
 			String id = String.format( "field:%s:%s:%s", def.getDeclaringType( ).getInternalName( ), def.getName( ), def.getSignature( ) );
-			this.writeStyled( text, class_( CSS.JAVA_DEF_FIELD ).id( id ) );
+			HtmlAttributes attributes = new HtmlAttributes();
+			attributes.add("class", CSS.JAVA_DEF_TYPE);
+			attributes.add("id", id);
+			this.writeStyled(text, attributes);
 		}
 		else if( definition instanceof ParameterDefinition ) {
 			this.writeStyled( text, CSS.JAVA_DEF_PARAMETER );
@@ -204,7 +212,8 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 				return;
 			}
 			
-			HtmlAttributes attribs = class_( CSS.JAVA_REF_TYPE );
+			HtmlAttributes attribs = new HtmlAttributes();
+			attribs.add("class", CSS.JAVA_REF_TYPE);
 			attribs.add( "ref_type", "type" );
 			attribs.add( "type", ref.getInternalName( ) );
 			
@@ -213,7 +222,8 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 		else if( reference instanceof MethodReference ) {
 			MethodReference ref = ( MethodReference ) reference;
 			
-			HtmlAttributes attribs = class_( CSS.JAVA_REF_METHOD );
+			HtmlAttributes attribs =  new HtmlAttributes();
+			attribs.add("class", CSS.JAVA_REF_METHOD);
 			attribs.add( "ref_type", "method" );
 			attribs.add( "type", ref.getDeclaringType( ).getInternalName( ) );
 			attribs.add( "method_name", ref.getName( ) );
@@ -225,7 +235,8 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 		else if( reference instanceof FieldReference ) {
 			FieldReference ref = ( FieldReference ) reference;
 			
-			HtmlAttributes attribs = class_( CSS.JAVA_REF_FIELD );
+			HtmlAttributes attribs =  new HtmlAttributes();
+			attribs.add("class", CSS.JAVA_REF_FIELD);
 			attribs.add( "ref_type", "field" );
 			attribs.add( "type", ref.getDeclaringType( ).getInternalName( ) );
 			attribs.add( "field_name", ref.getName( ) );
@@ -267,20 +278,24 @@ public class JavaHtmlOutput extends HtmlRenderer implements ITextOutput {
 	}
 	
 	private void writeStyled( String text, String styleClasses ) {
-		this.writeStyled( text, class_( styleClasses ) );
+		HtmlAttributes attribs =  new HtmlAttributes();
+		attribs.add("class", styleClasses);
+		this.writeStyled( text, attribs );
 	}
 	
 	private void writeStyled( String text, HtmlAttributes attribs ) {
 		this.writeIndent( );
 		
 		this.render( ( canvas ) -> {
-			canvas.span( attribs ).content( text );
+			canvas.span( attribs ).content( text )._span();
 		} );
 	}
 	
 	private void openLine( ) {
 		this.render( ( canvas ) -> {
-			canvas.span( class_( CSS.JAVA_LINE ) );
+			HtmlAttributes attributes = new HtmlAttributes();
+			attributes.add("class", CSS.JAVA_LINE);
+			canvas.span(attributes);
 		} );
 	}
 	

@@ -13,7 +13,7 @@ public class MethodFilter extends Filter {
 	private boolean accept;
 	
 	public MethodFilter( MethodReference method ) {
-		super( ASM5 );
+		super( ASM6 );
 		
 		this.method = Objects.requireNonNull( method, "method" );
 		

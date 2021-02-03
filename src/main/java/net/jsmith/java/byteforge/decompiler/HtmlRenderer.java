@@ -3,10 +3,7 @@ package net.jsmith.java.byteforge.decompiler;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.rendersnake.HtmlAttributesFactory;
-import org.rendersnake.HtmlCanvas;
-
-public abstract class HtmlRenderer extends HtmlAttributesFactory {
+public abstract class HtmlRenderer {
 
 	private final HtmlCanvas canvas;
 	

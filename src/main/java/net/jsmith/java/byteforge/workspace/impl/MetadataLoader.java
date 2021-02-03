@@ -29,7 +29,7 @@ public class MetadataLoader {
 		}
 		
 		public MetadataVisitor( ClassVisitor delegate ) {
-			super( ASM5, delegate );
+			super( ASM6, delegate );
 			
 			this.builder = MetadataImpl.builder( );
 		}

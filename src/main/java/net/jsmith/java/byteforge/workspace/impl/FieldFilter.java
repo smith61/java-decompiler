@@ -13,7 +13,7 @@ public class FieldFilter extends Filter {
 	private boolean accept;
 	
 	public FieldFilter( FieldReference fieldReference ) {
-		super( ASM5 );
+		super( ASM6 );
 		
 		this.field = Objects.requireNonNull( fieldReference, "fieldReference" );
 		
